@@ -1,13 +1,14 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+/* PrimeReact theme - choose one */
+/* @import "primereact/resources/themes/lara-dark-purple/theme.css"; */
+/* @import "primereact/resources/themes/saga-blue/theme.css"; */
+@import "tailwindcss";
+@import "primereact/resources/themes/lara-light-purple/theme.css";
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* PrimeReact core */
+@import "primereact/resources/primereact.min.css";
+@import "primeicons/primeicons.css";
+
+.p-dataview-header {
+    background: inherit;
+    border: 0;
 }
