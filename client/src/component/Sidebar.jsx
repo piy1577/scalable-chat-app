@@ -8,6 +8,7 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { products } from "./temp";
 import { TieredMenu } from "primereact/tieredmenu";
+import { Avatar } from "primereact/avatar";
 
 export default function Sidebar() {
     const menu = useRef(null);
@@ -15,12 +16,15 @@ export default function Sidebar() {
     const [email, setEmail] = useState(false);
     const item = [
         {
-            label: "with Email",
+            label: "Add with Email",
             command: () => setEmail((t) => !t),
         },
         {
-            label: "with Code",
+            label: "Join with Code",
             command: () => setCode((t) => !t),
+        },
+        {
+            label: "Sign out",
         },
     ];
     const itemTemplate = (item) => {
@@ -43,14 +47,20 @@ export default function Sidebar() {
         );
     };
     const centerContent = (
-        <span className="flex justify-between w-full ">
+        <span className="grid grid-cols-[3.5rem_auto_10px] justify-strech w-full items-center">
+            <Avatar
+                image={
+                    "https://yt3.ggpht.com/yti/ANjgQV8FcipRrroXPP6So9rSr4N7XG53ORkKjCBiOHHRMEqQc2Y=s108-c-k-c0x00ffffff-no-rj"
+                }
+                size="large"
+                shape="circle"
+            />
             <IconField iconPosition="left">
                 <InputIcon className="pi pi-search" />
-                <InputText placeholder="Search" />
+                <InputText placeholder="Search" className="w-full" />
             </IconField>
-            <Button
-                rounded="true"
-                icon="pi pi-plus"
+            <InputIcon
+                className="pi pi-ellipsis-v ml-3 cursor-pointer"
                 onClick={(e) => menu.current.toggle(e)}
             />
         </span>

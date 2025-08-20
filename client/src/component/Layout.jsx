@@ -2,6 +2,8 @@ import React from "react";
 import { Splitter, SplitterPanel } from "primereact/splitter";
 import { Toolbar } from "primereact/toolbar";
 import Sidebar from "./Sidebar";
+import Chat from "./Chat";
+
 
 const Layout = () => {
     const start = (
@@ -79,7 +81,7 @@ const Layout = () => {
                     size={75}
                     className="flex align-items-center justify-content-center"
                 >
-                    Panel 2
+                    <Chat />
                 </SplitterPanel>
             </Splitter>
         </div>

@@ -12,3 +12,13 @@
     background: inherit;
     border: 0;
 }
+
+.p-datascroller-list > li {
+    display: flex;
+    width: 100%;
+}
+
+.fixed-textarea {
+    overflow-y: auto;
+    resize: none;
+}
