@@ -1,11 +1,16 @@
 import React from "react";
 import { Splitter, SplitterPanel } from "primereact/splitter";
 import { Toolbar } from "primereact/toolbar";
+import { InputText } from "primereact/inputtext";
+import { IconField } from "primereact/iconfield";
+import { InputIcon } from "primereact/inputicon";
+import { TieredMenu } from "primereact/tieredmenu";
+import { Avatar } from "primereact/avatar";
 import Sidebar from "./Sidebar";
 import Chat from "./Chat";
 
-
 const Layout = () => {
+    const menu = React.useRef(null);
     const start = (
         <React.Fragment>
             <svg
@@ -70,10 +75,49 @@ const Layout = () => {
             </svg>
         </React.Fragment>
     );
+    const item = [
+        {
+            label: "Create Group",
+            command: () => setEmail((t) => !t),
+        },
+        {
+            label: "Invite Email",
+            command: () => setCode((t) => !t),
+        },
+        {
+            label: "Join Group",
+        },
+        {
+            label: "Sign out",
+        },
+    ];
+
+    const end = (
+        <>
+            <Avatar
+                image={
+                    "https://yt3.ggpht.com/yti/ANjgQV8FcipRrroXPP6So9rSr4N7XG53ORkKjCBiOHHRMEqQc2Y=s108-c-k-c0x00ffffff-no-rj"
+                }
+                size="large"
+                shape="circle"
+                onClick={(e) => menu.current.toggle(e)}
+            />
+            <TieredMenu model={item} popup ref={menu} breakpoint="767px" />
+        </>
+    );
     return (
         <div className="card">
-            <Toolbar start={start} />
-            <Splitter style={{ height: "90vh " }}>
+            <Toolbar
+                start={start}
+                center={
+                    <IconField iconPosition="right">
+                        <InputIcon className="pi pi-search cursor-pointer" />
+                        <InputText placeholder="Search" />
+                    </IconField>
+                }
+                end={end}
+            />
+            <Splitter style={{ height: "91.5vh " }}>
                 <SplitterPanel size={25} minSize={10}>
                     <Sidebar />
                 </SplitterPanel>

@@ -16,9 +16,13 @@
 .p-datascroller-list > li {
     display: flex;
     width: 100%;
+    background-color: transparent;
 }
 
 .fixed-textarea {
     overflow-y: auto;
     resize: none;
+}
+.p-toolbar.p-component {
+    padding: 12px;
 }

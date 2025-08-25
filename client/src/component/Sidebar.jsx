@@ -2,31 +2,14 @@ import { useState, useRef } from "react";
 import { DataView } from "primereact/dataview";
 import { ScrollPanel } from "primereact/scrollpanel";
 import { InputText } from "primereact/inputtext";
-import { IconField } from "primereact/iconfield";
-import { InputIcon } from "primereact/inputicon";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { products } from "./temp";
-import { TieredMenu } from "primereact/tieredmenu";
-import { Avatar } from "primereact/avatar";
 
 export default function Sidebar() {
-    const menu = useRef(null);
     const [code, setCode] = useState(false);
     const [email, setEmail] = useState(false);
-    const item = [
-        {
-            label: "Add with Email",
-            command: () => setEmail((t) => !t),
-        },
-        {
-            label: "Join with Code",
-            command: () => setCode((t) => !t),
-        },
-        {
-            label: "Sign out",
-        },
-    ];
+
     const itemTemplate = (item) => {
         return (
             <>
@@ -46,34 +29,14 @@ export default function Sidebar() {
             </>
         );
     };
-    const centerContent = (
-        <span className="grid grid-cols-[3.5rem_auto_10px] justify-strech w-full items-center">
-            <Avatar
-                image={
-                    "https://yt3.ggpht.com/yti/ANjgQV8FcipRrroXPP6So9rSr4N7XG53ORkKjCBiOHHRMEqQc2Y=s108-c-k-c0x00ffffff-no-rj"
-                }
-                size="large"
-                shape="circle"
-            />
-            <IconField iconPosition="left">
-                <InputIcon className="pi pi-search" />
-                <InputText placeholder="Search" className="w-full" />
-            </IconField>
-            <InputIcon
-                className="pi pi-ellipsis-v ml-3 cursor-pointer"
-                onClick={(e) => menu.current.toggle(e)}
-            />
-        </span>
-    );
     return (
         <ScrollPanel style={{ height: "100%", width: "100%" }}>
             <DataView
                 style={{ width: "100%" }}
                 value={products}
-                header={centerContent}
                 listTemplate={(item) => <>{item.map(itemTemplate)}</>}
             ></DataView>
-            <TieredMenu model={item} popup ref={menu} breakpoint="767px" />
+
             <Dialog
                 header="Join Room"
                 visible={code}
