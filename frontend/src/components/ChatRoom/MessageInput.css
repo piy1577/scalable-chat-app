@@ -1,0 +1,124 @@
+.message-input-form {
+  width: 100%;
+}
+
+.message-input-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 24px;
+  padding: 0.5rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.message-input-container:focus-within {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.input-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-textarea {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #333;
+  min-height: 20px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.message-textarea::placeholder {
+  color: #999;
+}
+
+.message-textarea:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.message-textarea:disabled::placeholder {
+  color: #ddd;
+}
+
+.send-button-container {
+  flex-shrink: 0;
+}
+
+.send-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #667eea;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.send-button:hover:not(:disabled) {
+  background: #5a67d8;
+  transform: scale(1.05);
+}
+
+.send-button:disabled {
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.send-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+}
+
+.character-count {
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.character-count small {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+}
+
+.character-count .warning {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.character-count .error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .message-input-container {
+    padding: 0.375rem;
+    gap: 0.375rem;
+  }
+
+  .send-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .message-textarea {
+    font-size: 0.8125rem; /* 13px */
+  }
+}

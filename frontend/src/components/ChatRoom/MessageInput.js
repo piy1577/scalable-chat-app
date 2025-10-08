@@ -1,0 +1,91 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { Button } from 'primereact/button';
+import './MessageInput.css';
+
+const MessageInput = ({ onSendMessage, disabled, placeholder }) => {
+  const [message, setMessage] = useState('');
+  const textareaRef = useRef(null);
+  const [isTyping, setIsTyping] = useState(false);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [message]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (message.trim() && !disabled) {
+      onSendMessage(message.trim());
+      setMessage('');
+      setIsTyping(false);
+
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setMessage(e.target.value);
+
+    // Show typing indicator if user starts typing
+    if (e.target.value && !isTyping) {
+      setIsTyping(true);
+    } else if (!e.target.value && isTyping) {
+      setIsTyping(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="message-input-form">
+      <div className="message-input-container">
+        <div className="input-wrapper">
+          <InputTextarea
+            ref={textareaRef}
+            value={message}
+            onChange={handleInputChange}
+            onKeyPress={handleKeyPress}
+            placeholder={placeholder}
+            disabled={disabled}
+            className="message-textarea"
+            autoResize={false}
+            rows={1}
+            maxLength={1000}
+          />
+        </div>
+
+        <div className="send-button-container">
+          <Button
+            type="submit"
+            icon="pi pi-send"
+            className="send-button"
+            disabled={disabled || !message.trim()}
+            aria-label="Send message"
+          />
+        </div>
+      </div>
+
+      {message.length > 800 && (
+        <div className="character-count">
+          <small className={message.length > 1000 ? 'error' : 'warning'}>
+            {message.length}/1000
+          </small>
+        </div>
+      )}
+    </form>
+  );
+};
+
+export default MessageInput;
