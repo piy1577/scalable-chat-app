@@ -12,9 +12,8 @@ import socketService from './services/socketService';
 
 function App() {
   const [isConnected, setIsConnected] = useState(false);
-  const [currentRoom, setCurrentRoom] = useState('room1');
-  const [rooms, setRooms] = useState([]);
   const [users, setUsers] = useState([]);
+  const [currentChat, setCurrentChat] = useState(null);
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
@@ -25,49 +24,57 @@ function App() {
         setIsConnected(true);
 
         // Load initial data
-        loadInitialData();
+        await loadInitialData();
 
         // Set up event listeners
         setupEventListeners();
       } catch (error) {
         console.error('Failed to connect:', error);
-        // In demo mode, we'll still work but show offline status
-        setIsConnected(socketService.isDemoMode);
+        // In demo mode, we'll still work but show connected status
+        setIsConnected(true);
+        // Load data even if connection fails (for demo mode)
+        await loadInitialData();
       }
     };
 
-    const loadInitialData = () => {
-      // Load rooms
-      socketService.getRooms();
+    const loadInitialData = async () => {
+      try {
+        // Load users (contacts)
+        socketService.getUsers();
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
+    };
 
-      // Load users
-      socketService.getUsers();
-
-      // Load messages for current room
-      socketService.getMessages(currentRoom);
+    // Load users without auto-selecting
+    const handleUsersLoad = (usersList) => {
+      setUsers(usersList);
+      // Don't auto-select first user - let user choose
     };
 
     const setupEventListeners = () => {
-      // Handle new messages
-      socketService.onMessage((message) => {
-        setMessages(prev => [...prev, message]);
+      // Handle messages list for 1-on-1 chat (when switching chats)
+      socketService.onMessagesList((messagesList) => {
+        setMessages(messagesList);
       });
 
-      // Handle room joined
-      socketService.onRoomJoined((data) => {
-        console.log('Joined room:', data);
-        loadInitialData();
+      // Handle sent messages (for real-time updates)
+      socketService.onMessageSent((message) => {
+        // Only add message if it belongs to the current chat
+        if (currentChat && message.roomId === currentChat.id) {
+          setMessages(prev => {
+            // Check if message already exists to prevent duplicates
+            const messageExists = prev.some(msg => msg.id === message.id);
+            if (messageExists) {
+              return prev; // Don't add duplicate
+            }
+            return [...prev, message];
+          });
+        }
       });
 
       // Handle users list
-      socketService.onUsersList((usersList) => {
-        setUsers(usersList);
-      });
-
-      // Handle rooms list
-      socketService.onRoomsList((roomsList) => {
-        setRooms(roomsList);
-      });
+      socketService.onUsersList(handleUsersLoad);
 
       // Handle connection status
       socketService.onConnect(() => {
@@ -85,21 +92,21 @@ function App() {
     return () => {
       socketService.disconnect();
     };
-  }, [currentRoom]);
+  }, [currentChat]);
 
-  const handleRoomChange = (roomId) => {
-    setCurrentRoom(roomId);
-    setMessages([]); // Clear messages when switching rooms
-    socketService.getMessages(roomId);
+  const handleChatSelect = (user) => {
+    setCurrentChat(user);
+    setMessages([]); // Clear current messages
+    socketService.getMessages(user.id);
   };
 
   const handleSendMessage = (content) => {
-    if (!content.trim()) return;
+    if (!content.trim() || !currentChat) return;
 
     const message = {
       content: content.trim(),
-      roomId: currentRoom,
-      timestamp: new Date()
+      roomId: currentChat.id,
+      type: 'text'
     };
 
     socketService.sendMessage(message);
@@ -109,7 +116,7 @@ function App() {
     <Router>
       <div className="app">
         <div className="app-header">
-          <h1>Chat App {socketService.isDemoMode && <span className="demo-badge">DEMO</span>}</h1>
+          <h1>Chat App <span className="demo-badge">DEMO</span></h1>
           <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
             {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
           </div>
@@ -117,10 +124,9 @@ function App() {
 
         <div className="app-body">
           <Sidebar
-            rooms={rooms}
             users={users}
-            currentRoom={currentRoom}
-            onRoomChange={handleRoomChange}
+            currentChat={currentChat}
+            onChatSelect={handleChatSelect}
           />
 
           <Routes>
@@ -128,21 +134,10 @@ function App() {
               path="/"
               element={
                 <ChatRoom
-                  roomId={currentRoom}
                   messages={messages}
                   onSendMessage={handleSendMessage}
                   isConnected={isConnected}
-                />
-              }
-            />
-            <Route
-              path="/room/:roomId"
-              element={
-                <ChatRoom
-                  roomId={currentRoom}
-                  messages={messages}
-                  onSendMessage={handleSendMessage}
-                  isConnected={isConnected}
+                  currentChat={currentChat}
                 />
               }
             />

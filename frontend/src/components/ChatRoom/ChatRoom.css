@@ -6,36 +6,104 @@
   background: #f8f9fa;
 }
 
-.chat-header {
-  padding: 1rem;
+/* No Contact Selected State */
+.no-contact-selected {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  padding: 2rem;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999;
+  max-width: 400px;
+}
+
+.empty-state h2 {
+  margin: 0 0 1rem 0;
+  color: #666;
+  font-size: 1.5rem;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #666;
+  font-size: 1.25rem;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* Contact Profile Header - Balanced Compact */
+.contact-profile-header {
+  padding: 0.5rem 0.75rem;
   background: #ffffff;
   border-bottom: 1px solid #e0e0e0;
+  min-height: 55px;
 }
 
-.room-info-card {
+.contact-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 100%;
+}
+
+.contact-avatar-large {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.status-indicator-large {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+.contact-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.contact-details h3 {
   margin: 0;
-  border: none;
-  box-shadow: none;
-}
-
-.room-info h2 {
-  margin: 0 0 0.5rem 0;
   color: #333;
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
+  line-height: 1.1;
 }
 
-.room-info p {
+.contact-status-text {
   margin: 0;
   color: #666;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.1;
 }
 
+/* Chat Messages */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
   background: #ffffff;
+}
+
+.no-messages {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .chat-input {
@@ -46,8 +114,24 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .chat-header {
-    padding: 0.75rem;
+  .no-contact-selected {
+    padding: 1.5rem;
+  }
+
+  .contact-profile-header {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .contact-profile {
+    gap: 0.5rem;
+  }
+
+  .contact-details h3 {
+    font-size: 0.875rem;
+  }
+
+  .contact-status-text {
+    font-size: 0.625rem;
   }
 
   .chat-messages {
@@ -58,7 +142,11 @@
     padding: 0.75rem;
   }
 
-  .room-info h2 {
+  .empty-state h2 {
+    font-size: 1.25rem;
+  }
+
+  .empty-state h3 {
     font-size: 1.125rem;
   }
 }

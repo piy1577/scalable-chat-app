@@ -18,7 +18,6 @@ const MessageList = ({ messages }) => {
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
     const now = new Date();
-    const diff = now - date;
 
     // If message is from today, show time only
     if (date.toDateString() === now.toDateString()) {
@@ -33,7 +32,7 @@ const MessageList = ({ messages }) => {
     }
 
     // If message is older, show date and time
-    if (diff < 7 * 24 * 60 * 60 * 1000) {
+    if (Math.abs(now - date) < 7 * 24 * 60 * 60 * 1000) {
       return date.toLocaleDateString([], {
         weekday: 'short',
         hour: '2-digit',
@@ -53,6 +52,30 @@ const MessageList = ({ messages }) => {
     return userId === CURRENT_USER.id;
   };
 
+  // Group consecutive messages from the same sender
+  const groupMessagesBySender = (messages) => {
+    const groups = [];
+
+    messages.forEach((message, index) => {
+      const isOwn = isCurrentUser(message.userId);
+
+      // Check if we need to start a new group
+      const currentGroup = groups[groups.length - 1];
+      if (!currentGroup || currentGroup.isOwn !== isOwn) {
+        // Start new group
+        groups.push({
+          isOwn,
+          messages: [message]
+        });
+      } else {
+        // Add to existing group
+        currentGroup.messages.push(message);
+      }
+    });
+
+    return groups;
+  };
+
   if (messages.length === 0) {
     return (
       <div className="message-list-empty">
@@ -65,42 +88,50 @@ const MessageList = ({ messages }) => {
     );
   }
 
+  const messageGroups = groupMessagesBySender(messages);
+
   return (
     <div className="message-list">
-      {messages.map((message) => {
-        const user = getUserById(message.userId);
-        const isOwn = isCurrentUser(message.userId);
+      {messageGroups.map((group, groupIndex) => (
+        <div key={group.messages[0].id} className={`message-group ${group.isOwn ? 'own' : 'other'}`}>
+          {group.messages.map((message, messageIndex) => {
+            const user = getUserById(message.userId);
+            const isLastInGroup = messageIndex === group.messages.length - 1;
 
-        return (
-          <div
-            key={message.id}
-            className={`message ${isOwn ? 'own' : 'other'}`}
-          >
-            <div className="message-avatar">
-              <Avatar
-                image={user.avatar}
-                size="normal"
-                shape="circle"
-              />
-            </div>
+            return (
+              <div
+                key={message.id}
+                className={`message ${group.isOwn ? 'own' : 'other'}`}
+              >
+                <div className="message-content">
+                  <div className="message-bubble">
+                    <p>{message.content}</p>
+                    <div className="message-time">
+                      {formatTime(message.timestamp)}
+                    </div>
+                  </div>
 
-            <div className="message-content">
-              <div className="message-header">
-                <span className="message-author">
-                  {isOwn ? 'You' : user.name}
-                </span>
-                <span className="message-time">
-                  {formatTime(message.timestamp)}
-                </span>
+                  {isLastInGroup && (
+                    <div className="message-header">
+                      <div className="message-avatar-small">
+                        <Avatar
+                          image={user.avatar}
+                          size="normal"
+                          shape="circle"
+                          style={{ width: '24px', height: '24px' }}
+                        />
+                      </div>
+                      <span className="message-author">
+                        {group.isOwn ? 'You' : user.name}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              <div className="message-bubble">
-                <p>{message.content}</p>
-              </div>
-            </div>
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 };

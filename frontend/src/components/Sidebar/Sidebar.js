@@ -1,28 +1,24 @@
-import React, { useState } from 'react';
-import { Card } from 'primereact/card';
+import React from 'react';
 import { Avatar } from 'primereact/avatar';
-import { Badge } from 'primereact/badge';
 import './Sidebar.css';
 
-const Sidebar = ({ rooms, users, currentRoom, onRoomChange }) => {
-  const [activeTab, setActiveTab] = useState('rooms');
-
+const Sidebar = ({ users, currentChat, onChatSelect }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'online': return '#4caf50';
-      case 'away': return '#ff9800';
       case 'offline': return '#9e9e9e';
       default: return '#9e9e9e';
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'online': return 'Online';
-      case 'away': return 'Away';
-      case 'offline': return 'Offline';
-      default: return 'Unknown';
-    }
+  const getStatusText = (user) => {
+    // Show last message for all users (online and offline)
+    return user.lastMessage ? truncateMessage(user.lastMessage) : 'No messages yet';
+  };
+
+  const truncateMessage = (message) => {
+    if (message.length <= 25) return message;
+    return message.substring(0, 25) + '...';
   };
 
   const formatLastSeen = (lastSeen) => {
@@ -42,54 +38,20 @@ const Sidebar = ({ rooms, users, currentRoom, onRoomChange }) => {
 
   return (
     <div className="sidebar">
-      <div className="sidebar-tabs">
-        <button
-          className={`sidebar-tab ${activeTab === 'rooms' ? 'active' : ''}`}
-          onClick={() => setActiveTab('rooms')}
-        >
-          <i className="pi pi-comments"></i>
-          Rooms
-        </button>
-        <button
-          className={`sidebar-tab ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          <i className="pi pi-users"></i>
-          Users
-        </button>
+      <div className="sidebar-header">
+        <h3>Messages</h3>
       </div>
 
       <div className="sidebar-content">
-        {activeTab === 'rooms' && (
-          <div className="rooms-section">
-            <h3>Chat Rooms</h3>
-            {rooms.map(room => (
-              <Card
-                key={room.id}
-                className={`room-card ${currentRoom === room.id ? 'active' : ''}`}
-                onClick={() => onRoomChange(room.id)}
-              >
-                <div className="room-info">
-                  <div className="room-header">
-                    <h4>{room.name}</h4>
-                    <Badge value={room.userCount} severity="info" />
-                  </div>
-                  <p className="room-description">{room.description}</p>
-                  <div className="room-meta">
-                    <small>Last activity: {formatLastSeen(room.lastActivity)}</small>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-
-        {activeTab === 'users' && (
-          <div className="users-section">
-            <h3>Online Users</h3>
+        {users.length > 0 ? (
+          <div className="contacts-list">
             {users.map(user => (
-              <div key={user.id} className="user-item">
-                <div className="user-avatar">
+              <div
+                key={user.id}
+                className={`contact-item ${currentChat?.id === user.id ? 'active' : ''}`}
+                onClick={() => onChatSelect(user)}
+              >
+                <div className="contact-avatar">
                   <Avatar
                     image={user.avatar}
                     size="normal"
@@ -100,17 +62,18 @@ const Sidebar = ({ rooms, users, currentRoom, onRoomChange }) => {
                     style={{ backgroundColor: getStatusColor(user.status) }}
                   />
                 </div>
-                <div className="user-info">
-                  <div className="user-name">{user.name}</div>
-                  <div className="user-status">
-                    <small>{getStatusText(user.status)}</small>
-                    {user.status === 'offline' && (
-                      <small> • {formatLastSeen(user.lastSeen)}</small>
-                    )}
+                <div className="contact-info">
+                  <div className="contact-name">{user.name}</div>
+                  <div className="contact-status">
+                    <small>{getStatusText(user)}</small>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        ) : (
+          <div className="no-contacts">
+            <p>Loading contacts...</p>
           </div>
         )}
       </div>

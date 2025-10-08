@@ -13,7 +13,7 @@ class SocketService {
   connect() {
     if (this.isDemoMode) {
       this.isConnected = true;
-      this.emit('connect');
+      this.emitDirect('connect');
       return Promise.resolve();
     }
 
@@ -36,7 +36,7 @@ class SocketService {
   disconnect() {
     if (this.isDemoMode) {
       this.isConnected = false;
-      this.emit('disconnect');
+      this.emitDirect('disconnect');
       return;
     }
 
@@ -50,6 +50,27 @@ class SocketService {
   emit(event, data) {
     if (this.isDemoMode) {
       this.handleDemoEmit(event, data);
+      return;
+    }
+
+    if (this.socket && this.isConnected) {
+      this.socket.emit(event, data);
+    }
+  }
+
+  // Direct emit for internal demo events (bypasses handleDemoEmit)
+  emitDirect(event, data) {
+    if (this.isDemoMode) {
+      // Directly call listeners without going through handleDemoEmit
+      if (this.listeners.has(event)) {
+        this.listeners.get(event).forEach(callback => {
+          try {
+            callback(data);
+          } catch (error) {
+            console.error('Error in event listener for', event, error);
+          }
+        });
+      }
       return;
     }
 
@@ -109,6 +130,18 @@ class SocketService {
       case 'get_rooms':
         this.handleDemoGetRooms();
         break;
+      case 'get_messages':
+        this.handleDemoGetMessages(data);
+        break;
+      case 'users_list':
+        // This is emitted by handleDemoGetUsers, no need to handle again
+        break;
+      case 'rooms_list':
+        // This is emitted by handleDemoGetRooms, no need to handle again
+        break;
+      case 'messages_list':
+        // This is emitted by handleDemoGetMessages, no need to handle again
+        break;
       default:
         console.log('Demo mode - unhandled event:', event, data);
     }
@@ -116,28 +149,37 @@ class SocketService {
 
   async handleDemoJoinRoom(data) {
     const result = await mockAPI.joinRoom(data.roomId);
-    this.emit('room_joined', result);
+    this.emitDirect('room_joined', result);
   }
 
   async handleDemoLeaveRoom(data) {
     const result = await mockAPI.leaveRoom(data.roomId);
-    this.emit('room_left', result);
+    this.emitDirect('room_left', result);
   }
 
   async handleDemoSendMessage(data) {
     const message = await mockAPI.sendMessage(data);
-    this.emit('message_sent', message);
-    this.emit('new_message', message);
+    this.emitDirect('message_sent', message);
+    // Don't emit 'new_message' here to avoid duplication
+    // The message is already added to DEMO_MESSAGES by mockAPI.sendMessage
   }
 
   async handleDemoGetUsers() {
     const users = await mockAPI.getUsers();
-    this.emit('users_list', users);
+    // Emit directly to listeners without going through handleDemoEmit
+    this.emitDirect('users_list', users);
   }
 
   async handleDemoGetRooms() {
     const rooms = await mockAPI.getRooms();
-    this.emit('rooms_list', rooms);
+    // Emit directly to listeners without going through handleDemoEmit
+    this.emitDirect('rooms_list', rooms);
+  }
+
+  async handleDemoGetMessages(data) {
+    const messages = await mockAPI.getMessages(data.roomId, data.limit);
+    // Emit directly to listeners without going through handleDemoEmit
+    this.emitDirect('messages_list', messages);
   }
 
   // Chat-specific methods
@@ -159,6 +201,10 @@ class SocketService {
 
   getRooms() {
     this.emit('get_rooms');
+  }
+
+  getMessages(roomId, limit = 50) {
+    this.emit('get_messages', { roomId, limit });
   }
 
   // Event listeners for chat
@@ -184,6 +230,10 @@ class SocketService {
 
   onRoomsList(callback) {
     this.on('rooms_list', callback);
+  }
+
+  onMessagesList(callback) {
+    this.on('messages_list', callback);
   }
 
   onUserJoined(callback) {
