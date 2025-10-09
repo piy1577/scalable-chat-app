@@ -1,4 +1,4 @@
-/* Global Styles */
+/* Global Styles - Theme Variables */
 * {
   margin: 0;
   padding: 0;
@@ -9,6 +9,9 @@ html, body {
   height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -31,4 +34,93 @@ ul, ol {
 a {
   text-decoration: none;
   color: inherit;
+}
+
+/* Theme-based scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* CSS Variables for Light Theme (default) */
+:root {
+  /* Light Theme Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f4;
+  --bg-input: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-inverse: #ffffff;
+
+  --border-primary: #e0e0e0;
+  --border-secondary: #f0f0f0;
+
+  --accent-primary: #667eea;
+  --accent-hover: #5a67d8;
+  --accent-light: #f0f2ff;
+
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+
+  --message-own-bg: #667eea;
+  --message-other-bg: #f1f3f4;
+  --message-own-text: #ffffff;
+  --message-other-text: #333333;
+
+  --shadow-light: rgba(0,0,0,0.1);
+  --shadow-medium: rgba(0,0,0,0.15);
+  --shadow-dark: rgba(0,0,0,0.3);
+}
+
+/* Dark Theme Colors */
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #363636;
+  --bg-input: #363636;
+  --bg-card: #2d2d2d;
+  --bg-header: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-tertiary: #999999;
+  --text-inverse: #ffffff;
+
+  --border-primary: #404040;
+  --border-secondary: #404040;
+
+  --accent-primary: #8b95ff;
+  --accent-hover: #9ba3ff;
+  --accent-light: #404040;
+
+  --scrollbar-track: #2d2d2d;
+  --scrollbar-thumb: #555555;
+  --scrollbar-thumb-hover: #666666;
+
+  --message-own-bg: #667eea;
+  --message-other-bg: #363636;
+  --message-own-text: #ffffff;
+  --message-other-text: #ffffff;
+
+  --shadow-light: rgba(0,0,0,0.3);
+  --shadow-medium: rgba(0,0,0,0.3);
+  --shadow-dark: rgba(0,0,0,0.5);
 }

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import 'primereact/resources/themes/lara-light-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -8,143 +7,80 @@ import './App.css';
 
 import ChatRoom from './components/ChatRoom/ChatRoom';
 import Sidebar from './components/Sidebar/Sidebar';
-import socketService from './services/socketService';
+import ThemeToggle from './components/ThemeToggle/ThemeToggle';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { useSocketConnection } from './hooks';
 
 function App() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [users, setUsers] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
-  const [messages, setMessages] = useState([]);
-
-  useEffect(() => {
-    // Initialize socket connection
-    const initializeConnection = async () => {
-      try {
-        await socketService.connect();
-        setIsConnected(true);
-
-        // Load initial data
-        await loadInitialData();
-
-        // Set up event listeners
-        setupEventListeners();
-      } catch (error) {
-        console.error('Failed to connect:', error);
-        // In demo mode, we'll still work but show connected status
-        setIsConnected(true);
-        // Load data even if connection fails (for demo mode)
-        await loadInitialData();
-      }
-    };
-
-    const loadInitialData = async () => {
-      try {
-        // Load users (contacts)
-        socketService.getUsers();
-      } catch (error) {
-        console.error('Error loading initial data:', error);
-      }
-    };
-
-    // Load users without auto-selecting
-    const handleUsersLoad = (usersList) => {
-      setUsers(usersList);
-      // Don't auto-select first user - let user choose
-    };
-
-    const setupEventListeners = () => {
-      // Handle messages list for 1-on-1 chat (when switching chats)
-      socketService.onMessagesList((messagesList) => {
-        setMessages(messagesList);
-      });
-
-      // Handle sent messages (for real-time updates)
-      socketService.onMessageSent((message) => {
-        // Only add message if it belongs to the current chat
-        if (currentChat && message.roomId === currentChat.id) {
-          setMessages(prev => {
-            // Check if message already exists to prevent duplicates
-            const messageExists = prev.some(msg => msg.id === message.id);
-            if (messageExists) {
-              return prev; // Don't add duplicate
-            }
-            return [...prev, message];
-          });
-        }
-      });
-
-      // Handle users list
-      socketService.onUsersList(handleUsersLoad);
-
-      // Handle connection status
-      socketService.onConnect(() => {
-        setIsConnected(true);
-      });
-
-      socketService.onDisconnect(() => {
-        setIsConnected(false);
-      });
-    };
-
-    initializeConnection();
-
-    // Cleanup on unmount
-    return () => {
-      socketService.disconnect();
-    };
-  }, [currentChat]);
+  const [isOptionsMenuOpen, setIsOptionsMenuOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const { isConnected } = useSocketConnection();
 
   const handleChatSelect = (user) => {
-    setCurrentChat(user);
-    setMessages([]); // Clear current messages
-    socketService.getMessages(user.id);
+    // If clicking on the currently selected chat, deselect it
+    if (currentChat?.id === user.id) {
+      setCurrentChat(null);
+    } else {
+      setCurrentChat(user);
+    }
   };
 
-  const handleSendMessage = (content) => {
-    if (!content.trim() || !currentChat) return;
-
-    const message = {
-      content: content.trim(),
-      roomId: currentChat.id,
-      type: 'text'
+  // Global ESC key handler with priority system
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        // Priority 1: Close options menu first
+        if (isOptionsMenuOpen) {
+          setIsOptionsMenuOpen(false);
+        }
+        // Priority 2: Close invite modal second
+        else if (isInviteModalOpen) {
+          setIsInviteModalOpen(false);
+        }
+        // Priority 3: Deselect current chat last
+        else if (currentChat) {
+          setCurrentChat(null);
+        }
+      }
     };
 
-    socketService.sendMessage(message);
-  };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOptionsMenuOpen, isInviteModalOpen, currentChat]);
 
   return (
-    <Router>
+    <ThemeProvider>
       <div className="app">
         <div className="app-header">
           <h1>Chat App <span className="demo-badge">DEMO</span></h1>
-          <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-            {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <ThemeToggle />
+            <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
+              {isConnected ? '🟢 Connected' : '🔴 Disconnected'}
+            </div>
           </div>
         </div>
 
         <div className="app-body">
           <Sidebar
-            users={users}
             currentChat={currentChat}
             onChatSelect={handleChatSelect}
+            isOptionsMenuOpen={isOptionsMenuOpen}
+            setIsOptionsMenuOpen={setIsOptionsMenuOpen}
+            isInviteModalOpen={isInviteModalOpen}
+            setIsInviteModalOpen={setIsInviteModalOpen}
           />
 
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <ChatRoom
-                  messages={messages}
-                  onSendMessage={handleSendMessage}
-                  isConnected={isConnected}
-                  currentChat={currentChat}
-                />
-              }
-            />
-          </Routes>
+          <ChatRoom
+            isConnected={isConnected}
+            currentChat={currentChat}
+          />
         </div>
       </div>
-    </Router>
+    </ThemeProvider>
   );
 }
 

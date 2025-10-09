@@ -108,6 +108,15 @@ const MessageList = ({ messages }) => {
                     <p>{message.content}</p>
                     <div className="message-time">
                       {formatTime(message.timestamp)}
+                      {group.isOwn && (
+                        <span className={`seen-status ${message.seen ? 'seen' : 'sent'}`}>
+                          {message.seen ? (
+                            <span className="double-tick">✓✓</span>
+                          ) : (
+                            <span className="single-tick">✓</span>
+                          )}
+                        </span>
+                      )}
                     </div>
                   </div>
 

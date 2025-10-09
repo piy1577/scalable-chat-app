@@ -15,17 +15,18 @@
 
 .empty-state {
   text-align: center;
-  color: #999;
+  color: var(--text-secondary);
 }
 
 .empty-state h3 {
   margin: 0 0 0.5rem 0;
-  color: #666;
+  color: var(--text-primary);
 }
 
 .empty-state p {
   margin: 0;
   font-size: 0.875rem;
+  color: var(--text-secondary);
 }
 
 .message {
@@ -97,27 +98,27 @@
 
 .message-author {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .message-bubble {
-  background: #f1f3f4;
+  background: var(--message-other-bg);
   padding: 0.75rem 1rem;
-  border-radius: 18px 18px 18px 4px;
+  border-radius: 12px 12px 12px 4px;
   word-wrap: break-word;
   max-width: 70%;
   position: relative;
 }
 
 .message.own .message-bubble {
-  background: #667eea;
-  color: white;
-  border-radius: 18px 18px 4px 18px;
+  background: var(--message-own-bg);
+  color: var(--message-own-text);
+  border-radius: 12px 12px 4px 12px;
 }
 
 .message.other .message-bubble {
-  background: #f1f3f4;
-  color: #333;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .message-bubble p {
@@ -128,7 +129,7 @@
 
 .message-bubble .message-time {
   font-size: 0.6875rem;
-  color: rgba(0, 0, 0, 0.5);
+  color: var(--text-secondary);
   margin: 0;
   margin-top: 0.25rem;
 }
@@ -136,6 +137,36 @@
 .message.own .message-bubble .message-time {
   color: rgba(255, 255, 255, 0.7);
   text-align: right;
+}
+
+.seen-status {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.seen-status.seen {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.seen-status.sent {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.single-tick,
+.double-tick {
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: bold;
+}
+
+.double-tick {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.single-tick {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Responsive Design */

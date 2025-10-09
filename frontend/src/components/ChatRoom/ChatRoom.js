@@ -1,12 +1,15 @@
 import React, { useEffect, useRef } from 'react';
-import { Card } from 'primereact/card';
 import { Avatar } from 'primereact/avatar';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import { getStatusColor, formatLastSeen } from '../../utils/statusUtils';
+import { useChatState } from '../../hooks';
 import './ChatRoom.css';
 
-const ChatRoom = ({ messages, onSendMessage, isConnected, currentChat }) => {
+const ChatRoom = ({ isConnected, currentChat }) => {
+  const { messages, sendMessage } = useChatState(currentChat);
   const messagesEndRef = useRef(null);
+  const messageInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -16,12 +19,22 @@ const ChatRoom = ({ messages, onSendMessage, isConnected, currentChat }) => {
     scrollToBottom();
   }, [messages]);
 
+  // Focus message input when a chat is selected
+  useEffect(() => {
+    if (currentChat && messageInputRef.current) {
+      // Small delay to ensure the input is rendered before focusing
+      setTimeout(() => {
+        messageInputRef.current.focus();
+      }, 100);
+    }
+  }, [currentChat]);
+
   const handleSendMessage = (content) => {
     if (!isConnected || !currentChat) {
       console.warn('Cannot send message: not connected or no contact selected');
       return;
     }
-    onSendMessage(content);
+    sendMessage(content);
   };
 
   // If no contact is selected, show select contact screen
@@ -39,28 +52,7 @@ const ChatRoom = ({ messages, onSendMessage, isConnected, currentChat }) => {
     );
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'online': return '#4caf50';
-      case 'offline': return '#9e9e9e';
-      default: return '#9e9e9e';
-    }
-  };
 
-  const formatLastSeen = (lastSeen) => {
-    const now = new Date();
-    const diff = now - lastSeen;
-    const minutes = Math.floor(diff / 60000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
 
   return (
     <div className="chat-room">
@@ -107,6 +99,7 @@ const ChatRoom = ({ messages, onSendMessage, isConnected, currentChat }) => {
       {/* Message Input */}
       <div className="chat-input">
         <MessageInput
+          ref={messageInputRef}
           onSendMessage={handleSendMessage}
           disabled={!isConnected}
           placeholder={

@@ -1,11 +1,21 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
 import './MessageInput.css';
 
-const MessageInput = ({ onSendMessage, disabled, placeholder }) => {
+const MessageInput = forwardRef(({ onSendMessage, disabled, placeholder }, ref) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef(null);
+
+  // Expose focus method to parent component
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }
+  }));
+
   const [isTyping, setIsTyping] = useState(false);
 
   // Auto-resize textarea
@@ -86,6 +96,6 @@ const MessageInput = ({ onSendMessage, disabled, placeholder }) => {
       )}
     </form>
   );
-};
+});
 
 export default MessageInput;

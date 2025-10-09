@@ -1,0 +1,138 @@
+/* PrimeReact Dialog Override for Theme Compatibility */
+.p-dialog {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 30px var(--shadow-dark) !important;
+  border: 1px solid var(--border-primary) !important;
+}
+
+.p-dialog .p-dialog-header {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-primary) !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.p-dialog .p-dialog-content {
+  background: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+.p-dialog .p-dialog-footer {
+  background: var(--bg-tertiary) !important;
+  border-top: 1px solid var(--border-primary) !important;
+  border-radius: 0 0 12px 12px !important;
+}
+
+.p-dialog .p-dialog-header .p-dialog-title {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+}
+
+.p-dialog .p-dialog-header .p-dialog-header-icon {
+  color: var(--text-secondary) !important;
+}
+
+.p-dialog .p-dialog-header .p-dialog-header-icon:hover {
+  color: var(--text-primary) !important;
+  background: var(--accent-light) !important;
+}
+
+/* Theme-aware input styling for modal */
+.theme-input {
+  background: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
+  border-radius: 6px !important;
+  padding: 0.75rem !important;
+  font-size: 0.875rem !important;
+}
+
+.theme-input:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px rgba(139, 149, 255, 0.2) !important;
+  background: var(--bg-input) !important;
+  color: var(--text-primary) !important;
+}
+
+.theme-input::placeholder {
+  color: var(--text-secondary) !important;
+  opacity: 0.7 !important;
+}
+
+.theme-input:disabled {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+  opacity: 0.6 !important;
+}
+
+/* Form Styling */
+.invite-form {
+  padding: 0.5rem 0;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary) !important;
+  font-size: 0.875rem;
+}
+
+.input-container {
+  margin-top: 0.25rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-primary) !important;
+}
+
+/* PrimeReact Button Overrides */
+:global(.p-dialog) :global(.p-button) {
+  background: var(--accent-primary) !important;
+  border: 1px solid var(--accent-primary) !important;
+  color: #ffffff !important;
+}
+
+:global(.p-dialog) :global(.p-button:hover) {
+  background: var(--accent-hover) !important;
+  border-color: var(--accent-hover) !important;
+}
+
+:global(.p-dialog) :global(.p-button:focus) {
+  box-shadow: 0 0 0 2px rgba(139, 149, 255, 0.3) !important;
+}
+
+:global(.p-dialog) :global(.p-button.p-button-text) {
+  background: transparent !important;
+  color: var(--accent-primary) !important;
+  border: none !important;
+}
+
+:global(.p-dialog) :global(.p-button.p-button-text:hover) {
+  background: var(--accent-light) !important;
+  color: var(--accent-hover) !important;
+}
+
+/* PrimeReact Message Override */
+:global(.p-dialog) :global(.p-message) {
+  background: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-primary) !important;
+}
+
+:global(.p-dialog) :global(.p-message.p-message-error) {
+  background: rgba(244, 67, 54, 0.1) !important;
+  border-color: #f44336 !important;
+  color: #f44336 !important;
+}
