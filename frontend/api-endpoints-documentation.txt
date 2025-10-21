@@ -1,0 +1,319 @@
+# Chat Application API and Socket Endpoints Documentation
+
+## Overview
+This document lists all API endpoints and socket events used in the React chat application. The application supports both real-time socket communication and mock API calls for demo purposes.
+
+## Socket Endpoints and Events
+
+### Connection Management
+1. **connect()**
+   - **Purpose**: Establishes socket connection
+   - **Method**: Socket.IO connect
+   - **Parameters**: None
+   - **Response**: Connection success/failure
+
+2. **disconnect()**
+   - **Purpose**: Closes socket connection
+   - **Method**: Socket.IO disconnect
+   - **Parameters**: None
+   - **Response**: Disconnection confirmation
+
+### Room Management
+3. **join_room**
+   - **Purpose**: Join a chat room
+   - **Method**: Socket emit
+   - **Request Body**:
+     ```json
+     {
+       "roomId": "string"
+     }
+     ```
+   - **Response Event**: room_joined
+   - **Response Body**:
+     ```json
+     {
+       "success": true,
+       "roomId": "string"
+     }
+     ```
+
+4. **leave_room**
+   - **Purpose**: Leave a chat room
+   - **Method**: Socket emit
+   - **Request Body**:
+     ```json
+     {
+       "roomId": "string"
+     }
+     ```
+   - **Response Event**: room_left
+   - **Response Body**:
+     ```json
+     {
+       "success": true,
+       "roomId": "string"
+     }
+     ```
+
+### Messaging
+5. **send_message**
+   - **Purpose**: Send a message to a room
+   - **Method**: Socket emit
+   - **Request Body**:
+     ```json
+     {
+       "content": "string",
+       "roomId": "string",
+       "type": "text"
+     }
+     ```
+   - **Response Event**: message_sent
+   - **Response Body**:
+     ```json
+     {
+       "id": "string",
+       "roomId": "string",
+       "userId": "string",
+       "content": "string",
+       "timestamp": "Date",
+       "type": "text"
+     }
+     ```
+
+### Data Retrieval
+6. **get_users**
+   - **Purpose**: Retrieve list of users
+   - **Method**: Socket emit
+   - **Parameters**: None
+   - **Response Event**: users_list
+   - **Response Body**:
+     ```json
+     [
+       {
+         "id": "string",
+         "name": "string",
+         "email": "string",
+         "avatar": "string",
+         "status": "online|offline"
+       }
+     ]
+     ```
+
+7. **get_rooms**
+   - **Purpose**: Retrieve list of rooms
+   - **Method**: Socket emit
+   - **Parameters**: None
+   - **Response Event**: rooms_list
+   - **Response Body**:
+     ```json
+     [
+       {
+         "id": "string",
+         "name": "string",
+         "description": "string"
+       }
+     ]
+     ```
+
+8. **get_messages**
+   - **Purpose**: Retrieve messages for a specific room
+   - **Method**: Socket emit
+   - **Request Body**:
+     ```json
+     {
+       "roomId": "string",
+       "limit": 50
+     }
+     ```
+   - **Response Event**: messages_list
+   - **Response Body**:
+     ```json
+     [
+       {
+         "id": "string",
+         "roomId": "string",
+         "userId": "string",
+         "content": "string",
+         "timestamp": "Date",
+         "type": "text"
+       }
+     ]
+     ```
+
+### Event Listeners
+9. **new_message**
+   - **Purpose**: Listen for new incoming messages
+   - **Parameters**: callback function
+   - **Response Body**:
+     ```json
+     {
+       "id": "string",
+       "roomId": "string",
+       "userId": "string",
+       "content": "string",
+       "timestamp": "Date",
+       "type": "text"
+     }
+     ```
+
+10. **user_joined**
+    - **Purpose**: Listen for users joining rooms
+    - **Parameters**: callback function
+    - **Response Body**:
+      ```json
+      {
+        "userId": "string",
+        "roomId": "string",
+        "timestamp": "Date"
+      }
+      ```
+
+11. **user_left**
+    - **Purpose**: Listen for users leaving rooms
+    - **Parameters**: callback function
+    - **Response Body**:
+      ```json
+      {
+        "userId": "string",
+        "roomId": "string",
+        "timestamp": "Date"
+      }
+      ```
+
+12. **connect**
+    - **Purpose**: Listen for successful connection
+    - **Parameters**: callback function
+    - **Response**: Connection established
+
+13. **disconnect**
+    - **Purpose**: Listen for disconnection
+    - **Parameters**: callback function
+    - **Response**: Disconnection occurred
+
+14. **error**
+    - **Purpose**: Listen for error events
+    - **Parameters**: callback function
+    - **Response Body**:
+      ```json
+      {
+        "message": "string",
+        "code": "string"
+      }
+      ```
+
+## Mock API Functions (Demo Mode)
+
+### User Management
+1. **mockAPI.getUsers()**
+   - **Purpose**: Get all users (demo mode)
+   - **Method**: Promise-based API call
+   - **Parameters**: None
+   - **Response**:
+     ```json
+     [
+       {
+         "id": "string",
+         "name": "string",
+         "email": "string",
+         "avatar": "string",
+         "status": "online|offline",
+         "lastSeen": "Date"
+       }
+     ]
+     ```
+
+### Message Management
+2. **mockAPI.getMessages(userId, limit)**
+   - **Purpose**: Get messages for a specific user/chat
+   - **Method**: Promise-based API call
+   - **Parameters**:
+     - userId (string): User ID
+     - limit (number, optional): Number of messages to retrieve (default: 50)
+   - **Response**:
+     ```json
+     [
+       {
+         "id": "string",
+         "roomId": "string",
+         "userId": "string",
+         "content": "string",
+         "timestamp": "Date",
+         "type": "text"
+       }
+     ]
+     ```
+
+3. **mockAPI.sendMessage(message)**
+   - **Purpose**: Send a message
+   - **Method**: Promise-based API call
+   - **Request Body**:
+     ```json
+     {
+       "content": "string",
+       "roomId": "string",
+       "type": "text"
+     }
+     ```
+   - **Response**:
+     ```json
+     {
+       "id": "string",
+       "roomId": "string",
+       "userId": "string",
+       "content": "string",
+       "timestamp": "Date",
+       "type": "text"
+     }
+     ```
+
+### Room Management
+4. **mockAPI.getRooms()**
+   - **Purpose**: Get all available rooms
+   - **Method**: Promise-based API call
+   - **Parameters**: None
+   - **Response**:
+     ```json
+     [
+       {
+         "id": "string",
+         "name": "string",
+         "description": "string"
+       }
+     ]
+     ```
+
+5. **mockAPI.joinRoom(roomId)**
+   - **Purpose**: Join a room
+   - **Method**: Promise-based API call
+   - **Parameters**:
+     - roomId (string): Room ID to join
+   - **Response**:
+     ```json
+     {
+       "success": true,
+       "roomId": "string"
+     }
+     ```
+
+6. **mockAPI.leaveRoom(roomId)**
+   - **Purpose**: Leave a room
+   - **Method**: Promise-based API call
+   - **Parameters**:
+     - roomId (string): Room ID to leave
+   - **Response**:
+     ```json
+     {
+       "success": true,
+       "roomId": "string"
+     }
+     ```
+
+## Environment Configuration
+- **REACT_APP_MODE**: "demo" for mock API mode
+- **REACT_APP_SOCKET_URL**: Socket server URL (e.g., "http://localhost:3001")
+
+## Notes
+- In demo mode, all socket events are handled by mock functions
+- Real-time features like user presence and live messaging are simulated
+- All API calls include artificial delays to simulate network conditions
+- Error handling is implemented for both socket and API failures

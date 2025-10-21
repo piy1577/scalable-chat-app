@@ -1,58 +1,78 @@
-import { useState, useEffect } from 'react';
-import socketService from '../services/socketService';
+import { useState, useEffect } from "react";
+import { getMessages } from "../services/chat.service";
+import { useSocket } from "../contexts/SocketContext";
+import { useAuth } from "../contexts/AuthContext";
+import { message_seen, new_message } from "../utils/chat.utils";
+import { useUsers } from "../contexts/UserContext";
 
-export const useChatState = (currentChat) => {
-  const [messages, setMessages] = useState([]);
+export const useChatState = () => {
+    const [messages, setMessages] = useState([]);
+    const { user } = useAuth();
+    const { socket } = useSocket();
+    const { currentUser, setUsers } = useUsers();
 
-  useEffect(() => {
-    if (!currentChat) {
-      setMessages([]);
-      return;
-    }
+    useEffect(() => {
+        if (currentUser) {
+            getMessages(currentUser.roomId, setMessages);
+        }
+    }, [currentUser]);
 
-    // Load messages for the current chat
-    socketService.getMessages(currentChat.id);
+    useEffect(() => {
+        if (!socket) return;
 
-    // Set up event listeners
-    const handleMessagesList = (messagesList) => {
-      setMessages(messagesList);
+        const handleNewMessage = (content) =>
+            new_message(content, currentUser, setMessages, socket, setUsers);
+
+        const handleMessageSeen = (data) => {
+            message_seen(data, currentUser, setMessages, user);
+        };
+        if (currentUser)
+            socket.emit("seen_message", { roomId: currentUser.roomId });
+
+        socket.on("new_message", handleNewMessage);
+        socket.on("message_seen", handleMessageSeen);
+        return () => {
+            socket.off("new_message", handleNewMessage);
+            socket.off("message_seen", handleMessageSeen);
+        };
+    }, [socket, currentUser, setMessages, user, setUsers]);
+
+    const sendMessage = (content) => {
+        if (!content.trim() || !currentUser) return;
+        const message = {
+            content: content.trim(),
+            roomId: currentUser.roomId,
+        };
+        if (socket) {
+            socket.emit("send_message", message);
+            setUsers((t) =>
+                t.map((u) =>
+                    u.roomId === currentUser.roomId
+                        ? {
+                              ...u,
+                              lastMessage: {
+                                  senderId: user.id,
+                                  content: content.trim(),
+                                  roomId: currentUser.roomId,
+                                  createdAt: new Date().toISOString(),
+                                  seen: false,
+                              },
+                          }
+                        : u
+                )
+            );
+            setMessages((t) => [
+                ...t,
+                {
+                    senderId: user.id,
+                    content: content.trim(),
+                    roomId: currentUser.roomId,
+                    createdAt: new Date().toISOString(),
+                    seen: false,
+                },
+            ]);
+        }
     };
 
-    const handleMessageSent = (message) => {
-      // Only add message if it belongs to the current chat
-      if (currentChat && message.roomId === currentChat.id) {
-        setMessages(prev => {
-          // Check if message already exists to prevent duplicates
-          const messageExists = prev.some(msg => msg.id === message.id);
-          if (messageExists) {
-            return prev; // Don't add duplicate
-          }
-          return [...prev, message];
-        });
-      }
-    };
-
-    socketService.onMessagesList(handleMessagesList);
-    socketService.onMessageSent(handleMessageSent);
-
-    // Cleanup function
-    return () => {
-      socketService.off('messages_list', handleMessagesList);
-      socketService.off('message_sent', handleMessageSent);
-    };
-  }, [currentChat]);
-
-  const sendMessage = (content) => {
-    if (!content.trim() || !currentChat) return;
-
-    const message = {
-      content: content.trim(),
-      roomId: currentChat.id,
-      type: 'text'
-    };
-
-    socketService.sendMessage(message);
-  };
-
-  return { messages, sendMessage };
+    return { messages, sendMessage };
 };
