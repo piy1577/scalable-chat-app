@@ -1,5 +1,5 @@
-const RedisService = require("../services/Redis.service");
-const redis = RedisService.getInstance();
+const CacheService = require("../services/Cache.service");
+const cache = CacheService.getInstance();
 
 async function getGoogleUser(access_token) {
     try {
@@ -49,7 +49,7 @@ const authenticate = async (req, res, next) => {
     try {
         let userinfo = await getGoogleUser(google_token);
         if (!userinfo) {
-            const refresh_token = await redis.get(google_token);
+            const refresh_token = await cache.get(google_token);
             if (!refresh_token)
                 return res.status(401).json({ message: "UNAUTHORIZED" });
 
@@ -59,8 +59,8 @@ const authenticate = async (req, res, next) => {
                     .status(401)
                     .json({ message: "Unable to refresh token" });
 
-            await redis.delete(google_token);
-            await redis.set(newAccessToken, refresh_token);
+            await cache.delete(google_token);
+            await cache.set(newAccessToken, refresh_token);
 
             res.cookie("google_token", newAccessToken, {
                 httpOnly: true,

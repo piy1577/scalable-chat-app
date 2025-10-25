@@ -1,4 +1,4 @@
-const RedisService = require("../services/Redis.service");
+const CacheService = require("../services/Cache.service");
 const DBService = require("../services/db.service");
 const { getGoogleUser } = require("../middleware/authenticate.middleware");
 const userModel = require("../model/user.model");
@@ -6,7 +6,7 @@ const inviteModel = require("../model/invite.model");
 const roomModel = require("../model/room.model");
 const messageModel = require("../model/message.model");
 
-const redis = RedisService.getInstance();
+const cache = CacheService.getInstance();
 const db = DBService.getInstance();
 const client_id = process.env.GOOGLE_CLIENT_ID;
 const client_secret = process.env.GOOGLE_CLIENT_SECRET;
@@ -188,7 +188,7 @@ const callback = async (req, res) => {
         res.cookie("google_token", tokenData.access_token, cookieOptions);
 
         if (tokenData.refresh_token) {
-            await redis.set(tokenData.access_token, tokenData.refresh_token);
+            await cache.set(tokenData.access_token, tokenData.refresh_token);
         }
 
         const clientUrl = new URL(process.env.CLIENT_URL);
@@ -260,7 +260,7 @@ const logout = async (req, res) => {
         }
 
         // Get refresh token from Redis
-        const refresh_token = await redis.get(google_token);
+        const refresh_token = await cache.get(google_token);
 
         // Revoke refresh token if available
         if (refresh_token) {
@@ -291,7 +291,7 @@ const logout = async (req, res) => {
 
         // Clean up Redis
         try {
-            await redis.delete(google_token);
+            await cache.delete(google_token);
         } catch (err) {
             console.error("Error deleting token from Redis:", err.message);
         }
