@@ -4,8 +4,9 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Home/Layout";
 import SocketProvider from "./contexts/SocketContext";
 import UserProvider from "./contexts/UserContext";
+import React from "react";
 
-function App() {
+const App = React.memo(() => {
     return (
         <ThemeProvider>
             <AuthProvider>
@@ -17,6 +18,6 @@ function App() {
             </AuthProvider>
         </ThemeProvider>
     );
-}
+});
 
 export default App;

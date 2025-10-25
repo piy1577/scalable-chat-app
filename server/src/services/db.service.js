@@ -55,11 +55,30 @@ class DBService {
         return saved;
     }
 
-    async find(model, options = { one: false, query: {}, exclude: {} }) {
-        if (options.one) {
-            return await model.findOne(options.query, options.exclude);
+    async find(
+        model,
+        options = {
+            one: false,
+            query: {},
+            exclude: {},
+            sort: null,
+            limit: null,
+            skip: null,
         }
-        return await model.find(options.query, options.exclude);
+    ) {
+        const { one, query, exclude, sort, limit, skip } = options;
+
+        let queryBuilder = model.find(query, exclude);
+
+        if (sort) queryBuilder = queryBuilder.sort(sort);
+        if (limit) queryBuilder = queryBuilder.limit(limit);
+        if (skip) queryBuilder = queryBuilder.skip(skip);
+
+        if (one) {
+            return await model.findOne(query, exclude);
+        }
+
+        return await queryBuilder.exec();
     }
 
     async update(
@@ -81,6 +100,14 @@ class DBService {
 
     async count(model, query) {
         return await model.countDocuments(query);
+    }
+
+    async delete(model, options = { query: {}, one: false }) {
+        if (options.one) {
+            return await model.findOneAndDelete(options.query);
+        } else {
+            return await model.deleteMany(options.query);
+        }
     }
 }
 

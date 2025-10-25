@@ -68,7 +68,7 @@ const MessageInput = forwardRef(
                 socket.emit("stop_typing", { roomId: currentUser?.roomId });
                 setIsTyping(false);
             }, 1500);
-            setIsTyping(timeout);
+            setTypingTimeout(timeout);
         };
 
         return (

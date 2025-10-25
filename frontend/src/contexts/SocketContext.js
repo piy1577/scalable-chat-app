@@ -2,44 +2,47 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
 
-const socketContext = createContext();
+const SocketContext = createContext(null);
+
+export const useSocket = () => useContext(SocketContext);
 
 const SocketProvider = ({ children }) => {
-    const [socket, setSocket] = useState(null);
     const { user } = useAuth();
+    const [socket, setSocket] = useState(null);
 
     useEffect(() => {
-        if (user) {
-            const connected = io(process.env.REACT_APP_SOCKET_URL);
+        if (!user) return;
+        if (!socket) {
+            const s = io(process.env.REACT_APP_SOCKET_URL, {
+                transports: ["websocket"],
+            });
+            s.onAny((event, ...args) => {
+                console.log("🔹Incoming event:", event, "→", args);
+            });
+            const originalEmit = s.emit;
+            s.emit = function (event, ...args) {
+                console.log(`📤 emitting event: '${event}' →`, args);
+                return originalEmit.call(this, event, ...args);
+            };
 
-            if (connected) {
-                setSocket(connected);
-                connected.on("error", (error) => console.error(error));
-            }
+            s.on("connect_error", (err) => console.error("Socket error:", err));
+            s.emit("register", user.id);
+
+            setSocket(s);
         }
+        return () => {
+            if (socket) {
+                socket.disconnect();
+                setSocket(null);
+            }
+        };
     }, [user]);
 
-    useEffect(() => {
-        if (!user && socket) {
-            socket.disconnect();
-        }
-    }, [user, socket]);
-
-    useEffect(() => {
-        if (user && socket) {
-            socket.emit("register", user.id);
-        }
-    }, [user, socket]);
-
     return (
-        <socketContext.Provider value={{ socket }}>
+        <SocketContext.Provider value={{ socket }}>
             {children}
-        </socketContext.Provider>
+        </SocketContext.Provider>
     );
-};
-
-export const useSocket = () => {
-    return useContext(socketContext);
 };
 
 export default SocketProvider;

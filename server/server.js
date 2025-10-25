@@ -1,13 +1,13 @@
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
+const morgan = require("morgan");
 require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const authRouter = require("./src/routes/auth.router");
 const userRouter = require("./src/routes/user.router");
 const errorHandler = require("./src/middleware/Error.middleware");
 const notFoundHanlder = require("./src/middleware/notFound.middleware");
-const apiLoggingHandler = require("./src/middleware/apiLogging.middleware");
 const connectSocket = require("./src/routes/socket.router");
 
 const app = express();
@@ -21,8 +21,8 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
-app.use("/api", apiLoggingHandler);
-app.use("/health", apiLoggingHandler, (req, res) => {
+app.use(morgan("short"));
+app.use("/health", (req, res) => {
     res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 app.use("/api/auth", authRouter);

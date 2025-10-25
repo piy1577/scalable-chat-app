@@ -1,13 +1,15 @@
+const inviteModel = require("../model/invite.model");
 const messageModel = require("../model/message.model");
 const roomModel = require("../model/room.model");
 const userModel = require("../model/user.model");
 const DBService = require("../services/db.service");
-const RedisService = require("../services/Redis.service");
+const { default: EmailService } = require("../services/email.service");
+// const RedisService = require("../services/Redis.service");
 
 const db = DBService.getInstance();
-const redis = RedisService.getInstance();
+// const redis = RedisService.getInstance();
+const emailSender = EmailService.getInstance();
 
-// Input validation helper
 const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -55,21 +57,48 @@ const inviteUser = async (req, res) => {
 
         if (!targetUser) {
             try {
-                const existingInvites = await redis.get(email);
-                let inviteList = [currentUserId];
-
-                if (existingInvites) {
-                    inviteList = [
-                        ...new Set([...existingInvites, currentUserId]),
-                    ];
-                }
-
-                await redis.set(email, inviteList);
-                console.log(
-                    "\x1b[33m%s\x1b[0m",
-                    `Invitation stored for non-existing user: ${email}`
-                );
-
+                await db.insert(inviteModel, {
+                    email,
+                    senderId: currentUserId,
+                });
+                const mail = {
+                    to: email,
+                    subject: "You're invited to join our Chat App!",
+                    text: `Hi there! You've been invited to join our chat application. Click the link below to get started:\n\n${
+                        process.env.CLIENT_URL || "http://localhost:3000"
+                    }\n\nBest regards,\nThe Chat App Team`,
+                    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+                            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                <h1 style="color: #333; text-align: center; margin-bottom: 30px;">You're Invited!</h1>
+                                <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+                                    Hi there! You've been invited to join our amazing chat application where you can connect with friends and colleagues in real-time.
+                                </p>
+                                <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                                    Click the button below to get started and explore all the features we have to offer!
+                                </p>
+                                <div style="text-align: center; margin: 30px 0;">
+                                    <a href="${
+                                        process.env.CLIENT_URL ||
+                                        "http://localhost:3000"
+                                    }"
+                                       style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
+                                        Join Chat App
+                                    </a>
+                                </div>
+                                <p style="color: #999; font-size: 14px; text-align: center; margin-top: 30px;">
+                                    If you didn't expect this invitation, you can safely ignore this email.
+                                </p>
+                                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                                <p style="color: #999; font-size: 12px; text-align: center;">
+                                    Best regards,<br>The Chat App Team
+                                </p>
+                            </div>
+                        </div>
+                    `,
+                };
+                await emailSender.sendEmail(mail);
                 return res.status(200).json({
                     message:
                         "Invitation sent successfully. User will be notified when they join.",
@@ -83,13 +112,14 @@ const inviteUser = async (req, res) => {
             }
         }
 
-        const existingRoom = await db.findOne(roomModel, {
+        const existingRoom = await db.find(roomModel, {
             query: {
                 participants: {
                     $all: [currentUserId, targetUser.id],
                     $size: 2,
                 },
             },
+            one: true,
         });
 
         if (existingRoom) {
@@ -103,10 +133,19 @@ const inviteUser = async (req, res) => {
             participants: [currentUserId, targetUser.id],
         });
 
-        console.log(
-            "\x1b[33m%s\x1b[0m",
-            `New chat room created: ${newRoom._id} between ${currentUserId} and ${targetUser.id}`
-        );
+        await db.insert(messageModel, {
+            roomId: newRoom._id,
+            senderId: "system",
+            content: `${
+                req.userinfo ? req.userinfo.name : "User"
+            } created a chat message`,
+        });
+
+        await db.insert(messageModel, {
+            roomId: newRoom._id,
+            senderId: "system",
+            content: `${targetUser.name} joined the chat message`,
+        });
 
         return res.status(201).json({
             message: "Chat room created successfully",
@@ -144,52 +183,55 @@ const getAllUser = async (req, res) => {
         }
 
         const roomIds = userRooms.map((room) => room._id);
-        const messageSummary = await messageModel.aggregate([
+
+        const messageSummary = await roomModel.aggregate([
             {
                 $match: {
-                    roomId: { $in: roomIds },
-                },
-            },
-            { $sort: { createdAt: -1 } },
-            {
-                $group: {
-                    _id: "$roomId",
-                    lastMessage: { $first: "$$ROOT" },
-                    unreadCount: {
-                        $sum: {
-                            $cond: [
-                                {
-                                    $and: [
-                                        { $eq: ["$seen", false] },
-                                        { $ne: ["$senderId", currentUserId] },
-                                    ],
-                                },
-                                1,
-                                0,
-                            ],
-                        },
-                    },
+                    _id: { $in: roomIds },
                 },
             },
             {
                 $lookup: {
-                    from: "rooms",
+                    from: "messages",
                     localField: "_id",
-                    foreignField: "_id",
-                    as: "room",
+                    foreignField: "roomId",
+                    as: "messages",
                 },
             },
-            { $unwind: "$room" },
-            { $unwind: "$room.participants" },
+            {
+                $addFields: {
+                    lastMessage: { $last: "$messages" },
+                    unreadCount: {
+                        $size: {
+                            $filter: {
+                                input: "$messages",
+                                as: "msg",
+                                cond: {
+                                    $and: [
+                                        { $eq: ["$$msg.seen", false] },
+                                        {
+                                            $ne: [
+                                                "$$msg.senderId",
+                                                currentUserId,
+                                            ],
+                                        },
+                                    ],
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            { $unwind: "$participants" },
             {
                 $match: {
-                    "room.participants": { $ne: currentUserId },
+                    participants: { $ne: currentUserId },
                 },
             },
             {
                 $lookup: {
                     from: "users",
-                    localField: "room.participants",
+                    localField: "participants",
                     foreignField: "id",
                     as: "user",
                 },
@@ -214,13 +256,10 @@ const getAllUser = async (req, res) => {
                     isActive: "$user.isActive",
                 },
             },
-            { $sort: { "lastMessage.createdAt": -1 } },
+            {
+                $sort: { "lastMessage.createdAt": -1 },
+            },
         ]);
-
-        console.log(
-            "\x1b[33m%s\x1b[0m",
-            `Retrieved ${messageSummary.length} chat users for user ${currentUserId}`
-        );
 
         return res.status(200).json(messageSummary);
     } catch (err) {
@@ -287,17 +326,14 @@ const getUserMessage = async (req, res) => {
         }
 
         const sortOptions = {};
-        sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
+        sortOptions[sortBy] = sortOrder === "asc" ? -1 : 1;
 
         const messages = await db.find(messageModel, {
             query: { roomId },
-            options: {
-                sort: sortOptions,
-                limit: limitNum,
-                skip: offsetNum,
-            },
+            sort: sortOptions,
+            limit: limitNum,
+            skip: offsetNum,
         });
-
         const totalCount = await db.count(messageModel, { roomId });
         const formattedMessages = messages.map((message) => ({
             id: message._id,
@@ -331,160 +367,8 @@ const getUserMessage = async (req, res) => {
     }
 };
 
-// Get room information
-const getRoomInfo = async (req, res) => {
-    try {
-        const { roomId } = req.params;
-        const { id: currentUserId } = req.userinfo;
-
-        // Validate current user exists
-        if (!currentUserId) {
-            return res.status(401).json({
-                message: "User not authenticated",
-            });
-        }
-
-        // Validate roomId parameter
-        if (!roomId) {
-            return res.status(400).json({
-                message: "Room ID is required",
-            });
-        }
-
-        // Get room with participant details
-        const room = await db.findOne(roomModel, {
-            query: { _id: roomId },
-        });
-
-        if (!room) {
-            return res.status(404).json({
-                message: "Room not found",
-            });
-        }
-
-        // Verify user is a participant
-        if (!room.participants.includes(currentUserId)) {
-            return res.status(403).json({
-                message: "Access denied to this room",
-            });
-        }
-
-        // Get participant user details
-        const participants = await db.find(userModel, {
-            query: { id: { $in: room.participants } },
-            exclude: { __v: 0, createdAt: 0 },
-        });
-
-        // Get recent messages count
-        const recentMessagesCount = await db.count(messageModel, { roomId });
-
-        return res.status(200).json({
-            message: "Room information retrieved successfully",
-            room: {
-                id: room._id,
-                participants: participants.map((user) => ({
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    picture: user.picture,
-                    isActive: user.isActive,
-                    lastSeen: user.lastSeen,
-                })),
-                createdAt: room.createdAt,
-                updatedAt: room.updatedAt,
-            },
-        });
-    } catch (err) {
-        console.error("Get room info error:", err);
-        return res.status(500).json({
-            message: "Failed to retrieve room information",
-            error:
-                process.env.NODE_ENV === "development"
-                    ? err.message
-                    : undefined,
-        });
-    }
-};
-
-// Search users (for inviting to chat)
-const searchUsers = async (req, res) => {
-    try {
-        const { id: currentUserId } = req.userinfo;
-        const { query, limit = 10 } = req.query;
-
-        // Validate current user exists
-        if (!currentUserId) {
-            return res.status(401).json({
-                message: "User not authenticated",
-            });
-        }
-
-        // Validate search query
-        if (!query || query.trim().length < 2) {
-            return res.status(400).json({
-                message: "Search query must be at least 2 characters long",
-            });
-        }
-
-        const searchTerm = query.trim();
-        const limitNum = parseInt(limit);
-
-        if (isNaN(limitNum) || limitNum < 1 || limitNum > 50) {
-            return res.status(400).json({
-                message: "Limit must be between 1 and 50",
-            });
-        }
-
-        // Search users by name or email
-        const users = await db.find(userModel, {
-            query: {
-                $and: [
-                    {
-                        $or: [
-                            { name: { $regex: searchTerm, $options: "i" } },
-                            { email: { $regex: searchTerm, $options: "i" } },
-                        ],
-                    },
-                    { id: { $ne: currentUserId } }, // Exclude current user
-                ],
-            },
-            options: {
-                limit: limitNum,
-            },
-            exclude: { __v: 0, createdAt: 0 },
-        });
-
-        // Format users for response
-        const formattedUsers = users.map((user) => ({
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            picture: user.picture,
-            isActive: user.isActive,
-        }));
-
-        return res.status(200).json({
-            message: "Users found successfully",
-            users: formattedUsers,
-            query: searchTerm,
-            total: formattedUsers.length,
-        });
-    } catch (err) {
-        console.error("Search users error:", err);
-        return res.status(500).json({
-            message: "Failed to search users",
-            error:
-                process.env.NODE_ENV === "development"
-                    ? err.message
-                    : undefined,
-        });
-    }
-};
-
 module.exports = {
     inviteUser,
     getAllUser,
     getUserMessage,
-    getRoomInfo,
-    searchUsers,
 };

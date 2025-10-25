@@ -44,23 +44,20 @@ const UserItem = ({ user, selectChat, currentUser }) => {
             </div>
             <div className="contact-info">
                 <div className="contact-name">{user.name}</div>
-                {user.lastMessage?.content && (
-                    <div className="last-message">
-                        <small
-                            className={
-                                user.lastMessage.seen ? "seen" : "unseen"
-                            }
-                        >
-                            {user.typing
-                                ? "Typing..."
-                                : user.lastMessage.senderId !== user.userId
+                <div className="last-message">
+                    <small
+                        className={user.lastMessage.seen ? "seen" : "unseen"}
+                    >
+                        {user.typing
+                            ? "Typing..."
+                            : user.lastMessage?.content
+                            ? user.lastMessage.senderId !== user.userId
                                 ? "You: " +
                                   truncateMessage(user.lastMessage.content)
-                                : "" +
-                                  truncateMessage(user.lastMessage.content)}
-                        </small>
-                    </div>
-                )}
+                                : "" + truncateMessage(user.lastMessage.content)
+                            : "No Message Yet"}
+                    </small>
+                </div>
             </div>
         </div>
     );

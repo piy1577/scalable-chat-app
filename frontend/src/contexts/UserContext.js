@@ -1,79 +1,101 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+    useMemo,
+} from "react";
 import { useSocket } from "./SocketContext";
 import { getUsers } from "../services/user.service";
 
-const userContext = createContext();
+const UserContext = createContext(null);
+
+export const useUsers = () => useContext(UserContext);
 
 const UserProvider = ({ children }) => {
     const [users, setUsers] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const { socket } = useSocket();
+    const usersRef = useRef(users);
 
     useEffect(() => {
-        if (currentUser) {
-            const userIndex = users.findIndex(
-                (u) => u.userId === currentUser.userId
-            );
-            if (users[userIndex]?.unreadCount !== 0)
-                setUsers((t) =>
-                    t.map((u, i) =>
-                        i === userIndex ? { ...u, unreadCount: 0 } : u
-                    )
-                );
-        }
-    }, [currentUser, users]);
+        usersRef.current = users;
+    }, [users]);
 
     useEffect(() => {
         getUsers(setUsers);
     }, []);
 
     useEffect(() => {
-        if (users) {
-            setCurrentUser((t) =>
-                t === null ? null : users.find((u) => u.id === t.id)
-            );
-        }
+        if (!currentUser) return;
+        setUsers((prev) => {
+            const idx = prev.findIndex((u) => u.userId === currentUser.userId);
+            if (idx === -1 || prev[idx].unreadCount === 0) return prev;
+            const updated = [...prev];
+            updated[idx] = { ...updated[idx], unreadCount: 0 };
+            return updated;
+        });
+    }, [currentUser]);
+
+    useEffect(() => {
+        setCurrentUser((prev) => {
+            if (!prev) return null;
+            const match = users.find((u) => u.id === prev.id);
+            return match || prev;
+        });
     }, [users]);
 
     useEffect(() => {
+        if (!socket) return;
+
         const handleTyping = (roomId) => {
-            setUsers((t) =>
-                t.map((u) => (u.roomId === roomId ? { ...u, typing: true } : u))
+            setUsers((prev) =>
+                prev.map((u) =>
+                    u.roomId === roomId ? { ...u, typing: true } : u
+                )
             );
         };
+
         const handleStoppedTyping = (roomId) => {
-            setUsers((t) =>
-                t.map((u) =>
+            setUsers((prev) =>
+                prev.map((u) =>
                     u.roomId === roomId ? { ...u, typing: false } : u
                 )
             );
         };
+
         const handleGetUsers = () => getUsers(setUsers);
-        if (socket) {
-            socket.on("get_users", handleGetUsers);
-            socket.on("typing", handleTyping);
-            socket.on("stopped_typing", handleStoppedTyping);
-        }
+        const handleAddUesr = (data) => {
+            socket.emit("add_room", data);
+        };
+
+        socket.on("get_users", handleGetUsers);
+        socket.on("typing", handleTyping);
+        socket.on("stopped_typing", handleStoppedTyping);
+        socket.on("add_room", handleAddUesr);
+
         return () => {
-            if (socket) {
-                socket.off("get_users", handleGetUsers);
-                socket.off("typing", handleTyping);
-                socket.off("stopped_typing", handleStoppedTyping);
-            }
+            socket.off("get_users", handleGetUsers);
+            socket.off("typing", handleTyping);
+            socket.off("stopped_typing", handleStoppedTyping);
+            socket.off("add_room", handleAddUesr);
         };
     }, [socket]);
 
-    return (
-        <userContext.Provider
-            value={{ users, currentUser, setCurrentUser, setUsers }}
-        >
-            {children}
-        </userContext.Provider>
+    const value = useMemo(
+        () => ({
+            users,
+            currentUser,
+            setCurrentUser,
+            setUsers,
+        }),
+        [users, currentUser]
     );
-};
 
-export const useUsers = () => {
-    return useContext(userContext);
+    return (
+        <UserContext.Provider value={value}>{children}</UserContext.Provider>
+    );
 };
 
 export default UserProvider;

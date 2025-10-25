@@ -15,7 +15,7 @@ export const useChatState = () => {
         if (currentUser) {
             getMessages(currentUser.roomId, setMessages);
         }
-    }, [currentUser]);
+    }, [currentUser?.roomId]);
 
     useEffect(() => {
         if (!socket) return;

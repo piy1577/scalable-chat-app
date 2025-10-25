@@ -1,63 +1,53 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    useCallback,
+    useMemo,
+} from "react";
 
-const ThemeContext = createContext();
+const ThemeContext = createContext(null);
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
+export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(() => {
-    // Check localStorage first, then system preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme;
-    }
-
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-
-    return 'light';
-  });
-
-  const toggleTheme = () => {
-    setTheme(prevTheme => {
-      const newTheme = prevTheme === 'light' ? 'dark' : 'light';
-      localStorage.setItem('theme', newTheme);
-      return newTheme;
+    const [theme, setTheme] = useState(() => {
+        const saved = localStorage.getItem("theme");
+        if (saved) return saved;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
     });
-  };
 
-  useEffect(() => {
-    // Apply theme to document
-    document.documentElement.setAttribute('data-theme', theme);
+    const toggleTheme = useCallback(() => {
+        setTheme((prev) => {
+            const next = prev === "light" ? "dark" : "light";
+            localStorage.setItem("theme", next);
+            return next;
+        });
+    }, []);
 
-    // Also update the old way for backward compatibility
-    if (theme === 'dark') {
-      document.body.classList.add('dark-theme');
-      document.body.classList.remove('light-theme');
-    } else {
-      document.body.classList.add('light-theme');
-      document.body.classList.remove('dark-theme');
-    }
-  }, [theme]);
+    useEffect(() => {
+        const root = document.documentElement;
+        const body = document.body;
 
-  const value = {
-    theme,
-    toggleTheme,
-    isDark: theme === 'dark',
-    isLight: theme === 'light'
-  };
+        root.setAttribute("data-theme", theme);
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
+        body.classList.toggle("dark-theme", theme === "dark");
+        body.classList.toggle("light-theme", theme === "light");
+    }, [theme]);
+
+    const value = useMemo(
+        () => ({
+            theme,
+            toggleTheme,
+            isDark: theme === "dark",
+            isLight: theme === "light",
+        }),
+        [theme]
+    );
+    return (
+        <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+    );
 };

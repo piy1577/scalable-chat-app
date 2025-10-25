@@ -5,11 +5,13 @@ import { InputText } from "primereact/inputtext";
 import { Message } from "primereact/message";
 import "./InviteModal.css";
 import { inviteUser } from "../../services/user.service";
+import { useSocket } from "../../contexts/SocketContext";
 
 const InviteModal = ({ visible, onHide }) => {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const { socket } = useSocket();
 
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,7 +35,7 @@ const InviteModal = ({ visible, onHide }) => {
         setError("");
 
         try {
-            await inviteUser(email.trim());
+            await inviteUser(email.trim(), socket);
             setEmail("");
             onHide();
         } catch (err) {

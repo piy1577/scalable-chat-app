@@ -2,13 +2,15 @@ const RedisService = require("../services/Redis.service");
 const DBService = require("../services/db.service");
 const { getGoogleUser } = require("../middleware/authenticate.middleware");
 const userModel = require("../model/user.model");
+const inviteModel = require("../model/invite.model");
+const roomModel = require("../model/room.model");
+const messageModel = require("../model/message.model");
 
 const redis = RedisService.getInstance();
 const db = DBService.getInstance();
 const client_id = process.env.GOOGLE_CLIENT_ID;
 const client_secret = process.env.GOOGLE_CLIENT_SECRET;
 
-// Input validation helper
 const validateEnvironmentVariables = () => {
     const requiredEnvVars = [
         "GOOGLE_CLIENT_ID",
@@ -24,7 +26,6 @@ const validateEnvironmentVariables = () => {
     }
 };
 
-// Generate secure redirect URI
 const getRedirectUri = (req) => {
     if (!req.get("host")) {
         throw new Error("Host header is missing");
@@ -38,11 +39,6 @@ const login = (req, res) => {
 
         const redirect_uri = getRedirectUri(req);
         const loginUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
-
-        console.log(
-            "\x1b[33m%s\x1b[0m",
-            `Redirecting to Google OAuth from IP: ${req.ip}`
-        );
         res.redirect(loginUrl);
     } catch (err) {
         console.error("Login error:", err.message);
@@ -60,7 +56,6 @@ const callback = async (req, res) => {
     try {
         const { code, error: oauthError } = req.query;
 
-        // Handle OAuth errors
         if (oauthError) {
             console.error("OAuth error:", oauthError);
             return res.status(400).json({
@@ -69,7 +64,6 @@ const callback = async (req, res) => {
             });
         }
 
-        // Validate authorization code
         if (!code) {
             return res.status(400).json({
                 message: "Authorization code is required",
@@ -79,7 +73,6 @@ const callback = async (req, res) => {
         validateEnvironmentVariables();
         const redirect_uri = getRedirectUri(req);
 
-        // Exchange code for tokens
         const tokenResponse = await fetch(
             `https://oauth2.googleapis.com/token`,
             {
@@ -107,7 +100,6 @@ const callback = async (req, res) => {
 
         const tokenData = await tokenResponse.json();
 
-        // Validate token response
         if (!tokenData.access_token) {
             console.error("Invalid token response:", tokenData);
             return res.status(400).json({
@@ -115,7 +107,6 @@ const callback = async (req, res) => {
             });
         }
 
-        // Get user info from Google
         const userInfo = await getGoogleUser(tokenData.access_token);
 
         if (!userInfo || !userInfo.email) {
@@ -125,16 +116,14 @@ const callback = async (req, res) => {
             });
         }
 
-        // Validate required user fields
-        const requiredFields = ["id", "email", "name"];
+        const requiredFields = ["id", "email", "name", "picture"];
         for (const field of requiredFields) {
             if (!userInfo[field]) {
                 throw new Error(`Missing required field: ${field}`);
             }
         }
 
-        // Update or create user in database
-        const userUpdateResult = await db.update(userModel, {
+        await db.update(userModel, {
             query: { email: userInfo.email },
             data: {
                 $set: {
@@ -149,27 +138,59 @@ const callback = async (req, res) => {
             upsert: true,
         });
 
-        // Set secure cookie with access token
+        const checkInvites = await db.find(inviteModel, {
+            query: { email: userInfo.email },
+        });
+        if (checkInvites && checkInvites.length > 0) {
+            const insertValue = checkInvites.map(
+                async (t) =>
+                    await db.insert(roomModel, {
+                        participants: [t.senderId, userInfo.id],
+                    })
+            );
+            const rooms = await Promise.all(insertValue);
+
+            for (let i = 0; i < rooms.length; i++) {
+                const room = rooms[i];
+                const invite = checkInvites[i];
+
+                const inviterUser = await db.find(userModel, {
+                    query: { id: invite.senderId },
+                    one: true,
+                });
+
+                await db.insert(messageModel, {
+                    roomId: room._id,
+                    senderId: "system",
+                    content: `${
+                        inviterUser ? inviterUser.name : "User"
+                    } created a chat message`,
+                    createdAt: invite.createdAt,
+                });
+
+                await db.insert(messageModel, {
+                    roomId: room._id,
+                    senderId: "system",
+                    content: `${userInfo.name} joined the chat message`,
+                });
+            }
+            await db.delete(inviteModel, {
+                query: { email: userInfo.email },
+            });
+        }
         const cookieOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            maxAge: 7 * 24 * 60 * 60 * 1000,
         };
 
         res.cookie("google_token", tokenData.access_token, cookieOptions);
 
-        // Store refresh token in Redis if available
         if (tokenData.refresh_token) {
             await redis.set(tokenData.access_token, tokenData.refresh_token);
         }
 
-        console.log(
-            "\x1b[33m%s\x1b[0m",
-            `User ${userInfo.email} authenticated successfully`
-        );
-
-        // Redirect to client with success state
         const clientUrl = new URL(process.env.CLIENT_URL);
         res.redirect(clientUrl.toString());
     } catch (err) {
@@ -262,11 +283,6 @@ const logout = async (req, res) => {
                         "Failed to revoke refresh token:",
                         revokeResponse.status
                     );
-                } else {
-                    console.log(
-                        "\x1b[33m%s\x1b[0m",
-                        "Refresh token revoked successfully"
-                    );
                 }
             } catch (err) {
                 console.error("Error revoking refresh token:", err.message);
@@ -280,20 +296,12 @@ const logout = async (req, res) => {
             console.error("Error deleting token from Redis:", err.message);
         }
 
-        // Clear cookie
         res.clearCookie("google_token", {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            path: "/", // Ensure cookie is cleared for all paths
+            path: "/",
         });
-
-        console.log(
-            `User logged out successfully, token: ${google_token.substring(
-                0,
-                10
-            )}...`
-        );
 
         return res.status(200).json({
             message: "Logged out successfully",

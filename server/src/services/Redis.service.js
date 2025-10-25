@@ -35,7 +35,6 @@ class RedisService {
 
     async set(key, value, expiryInSeconds = null) {
         try {
-            console.log("[REDIS_SET]", key, value, expiryInSeconds);
             if (expiryInSeconds)
                 await this.client.set(key, value, "EX", expiryInSeconds);
             else await this.client.set(key, value);
@@ -47,7 +46,6 @@ class RedisService {
     async get(key) {
         try {
             const value = await this.client.get(key);
-            console.log("[REDIS_GET]", key, value);
             return value;
         } catch (err) {
             console.error(`Redis GET error for key: ${key}`, err);

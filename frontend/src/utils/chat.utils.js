@@ -50,6 +50,47 @@ export const groupMessagesBySender = (messages, currentUser) => {
     return groups;
 };
 
+export const groupMessagesByDate = (messages) => {
+    const groups = [];
+
+    messages.forEach((message) => {
+        const messageDate = new Date(message.createdAt).toDateString();
+        const currentGroup = groups[groups.length - 1];
+
+        if (!currentGroup || currentGroup.date !== messageDate) {
+            groups.push({
+                date: messageDate,
+                messages: [message],
+            });
+        } else {
+            currentGroup.messages.push(message);
+        }
+    });
+
+    return groups;
+};
+
+export const formatDateSeparator = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === now.toDateString()) {
+        return "Today";
+    }
+    if (date.toDateString() === yesterday.toDateString()) {
+        return "Yesterday";
+    }
+
+    return date.toLocaleDateString([], {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+};
+
 export const new_message = (
     content,
     currentChat,

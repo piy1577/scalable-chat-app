@@ -10,9 +10,18 @@ export const getUsers = async (setUser) => {
     }
 };
 
-export const inviteUser = async (email) => {
+export const inviteUser = async (email, socket) => {
     try {
-        await apiUtil.post("user", { email });
+        const res = await apiUtil.post("user", { email });
+        if (res.ok) {
+            const response = await res.json();
+            if (response?.participants) {
+                socket.emit("update_users", {
+                    participants: response.participants,
+                    roomId: response.roomId,
+                });
+            }
+        }
     } catch (error) {
         console.error("Error sending invitation:", error);
     }
