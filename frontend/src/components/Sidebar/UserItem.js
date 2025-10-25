@@ -9,7 +9,7 @@ const UserItem = ({ user, selectChat, currentUser }) => {
             className={`contact-item ${
                 currentUser?.userId === user.userId ? "active" : ""
             }`}
-            onClick={() => selectChat((t) => (t != null ? null : user))}
+            onClick={() => selectChat(user)}
         >
             <div className="contact-avatar">
                 <Avatar image={user.picture} size="normal" shape="circle" />

@@ -6,6 +6,11 @@ const UserList = () => {
     const { users, currentUser, setCurrentUser } = useUsers() || {
         users: [],
     };
+
+    const handleUserSelect = (user) => {
+        setCurrentUser(user);
+    };
+
     return (
         <div className="sidebar-content">
             {users.length > 0 ? (
@@ -14,7 +19,7 @@ const UserList = () => {
                         <UserItem
                             key={u.roomId}
                             user={u}
-                            selectChat={setCurrentUser}
+                            selectChat={handleUserSelect}
                             currentUser={currentUser}
                         />
                     ))}

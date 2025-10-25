@@ -4,9 +4,18 @@ import Loading from "./Loading";
 import Login from "../Login/Login";
 import Sidebar from "../Sidebar/Sidebar";
 import ChatRoom from "../ChatRoom/ChatRoom";
+import { useUsers } from "../../contexts/UserContext";
+import { useEffect, useState } from "react";
 
 function Layout() {
     const { user, loading } = useAuth();
+    const { currentUser } = useUsers();
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        window.addEventListener("resize", () =>
+            setIsMobile(window.innerWidth <= 768)
+        );
+    }, []);
 
     if (loading) {
         return <Loading />;
@@ -20,8 +29,18 @@ function Layout() {
         <div className="app">
             <Header />
             <div className="app-body">
-                <Sidebar />
-                <ChatRoom />
+                {isMobile ? (
+                    currentUser ? (
+                        <ChatRoom isMobile={true} />
+                    ) : (
+                        <Sidebar isMobile={true} />
+                    )
+                ) : (
+                    <>
+                        <Sidebar />
+                        <ChatRoom />
+                    </>
+                )}
             </div>
         </div>
     );

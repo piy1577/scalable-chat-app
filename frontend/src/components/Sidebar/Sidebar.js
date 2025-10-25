@@ -4,7 +4,7 @@ import UserList from "./UserList";
 
 const Sidebar = () => {
     return (
-        <div className="sidebar">
+        <div className={`sidebar`}>
             <UserProfile />
             <UserList />
         </div>
