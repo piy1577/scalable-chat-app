@@ -4,16 +4,33 @@ import { useSocket } from "../contexts/SocketContext";
 import { useAuth } from "../contexts/AuthContext";
 import { message_seen, new_message } from "../utils/chat.utils";
 import { useUsers } from "../contexts/UserContext";
+import { useToast } from "../contexts/ToastContext";
 
 export const useChatState = () => {
     const [messages, setMessages] = useState([]);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
     const { user } = useAuth();
     const { socket } = useSocket();
     const { currentUser, setUsers } = useUsers();
+    const { error } = useToast();
 
     useEffect(() => {
         if (currentUser) {
-            getMessages(currentUser.roomId, setMessages);
+            const fetchMessages = async () => {
+                try {
+                    await getMessages(
+                        currentUser.roomId,
+                        setMessages,
+                        setHasMore,
+                        0,
+                        false
+                    );
+                } catch (err) {
+                    error("Failed to load messages", err.message);
+                }
+            };
+            fetchMessages();
         }
     }, [currentUser?.roomId]);
 
@@ -74,5 +91,22 @@ export const useChatState = () => {
         }
     };
 
-    return { messages, sendMessage };
+    const loadMessages = async () => {
+        if (hasMore) {
+            try {
+                await getMessages(
+                    currentUser.roomId,
+                    setMessages,
+                    setHasMore,
+                    page + 1,
+                    setPage,
+                    true
+                );
+            } catch (err) {
+                error("Failed to load more messages", err);
+            }
+        }
+    };
+
+    return { messages, sendMessage, loadMessages, hasMore };
 };

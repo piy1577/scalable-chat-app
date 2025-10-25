@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
+import { useToast } from "./ToastContext";
 
 const SocketContext = createContext(null);
 
@@ -9,6 +10,7 @@ export const useSocket = () => useContext(SocketContext);
 const SocketProvider = ({ children }) => {
     const { user } = useAuth();
     const [socket, setSocket] = useState(null);
+    const { error } = useToast();
 
     useEffect(() => {
         if (!user) return;
@@ -16,16 +18,10 @@ const SocketProvider = ({ children }) => {
             const s = io(process.env.REACT_APP_SOCKET_URL, {
                 transports: ["websocket"],
             });
-            s.onAny((event, ...args) => {
-                console.log("🔹Incoming event:", event, "→", args);
-            });
-            const originalEmit = s.emit;
-            s.emit = function (event, ...args) {
-                console.log(`📤 emitting event: '${event}' →`, args);
-                return originalEmit.call(this, event, ...args);
-            };
 
-            s.on("connect_error", (err) => console.error("Socket error:", err));
+            s.on("connect_error", (err) => {
+                error("Connection Error", err.message);
+            });
             s.emit("register", user.id);
 
             setSocket(s);

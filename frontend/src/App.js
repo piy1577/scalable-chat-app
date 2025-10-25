@@ -5,18 +5,20 @@ import Layout from "./components/Home/Layout";
 import SocketProvider from "./contexts/SocketContext";
 import UserProvider from "./contexts/UserContext";
 import React from "react";
-
+import ToastProvider from "./contexts/ToastContext";
 const App = React.memo(() => {
     return (
-        <ThemeProvider>
-            <AuthProvider>
-                <SocketProvider>
-                    <UserProvider>
-                        <Layout />
-                    </UserProvider>
-                </SocketProvider>
-            </AuthProvider>
-        </ThemeProvider>
+        <ToastProvider>
+            <ThemeProvider>
+                <AuthProvider>
+                    <SocketProvider>
+                        <UserProvider>
+                            <Layout />
+                        </UserProvider>
+                    </SocketProvider>
+                </AuthProvider>
+            </ThemeProvider>
+        </ToastProvider>
     );
 });
 

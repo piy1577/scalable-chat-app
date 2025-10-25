@@ -92,7 +92,6 @@ const seenMessage = async (socket, data) => {
         await db.update(messageModel, {
             query: { roomId, seen: false, senderId: { $ne: userId } },
             data: { $set: { seen: true } },
-            one: true,
         });
         socket.to(roomId).emit("message_seen", { roomId });
     } catch (err) {

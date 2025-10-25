@@ -6,12 +6,14 @@ import { Message } from "primereact/message";
 import "./InviteModal.css";
 import { inviteUser } from "../../services/user.service";
 import { useSocket } from "../../contexts/SocketContext";
+import { useToast } from "../../contexts/ToastContext";
 
 const InviteModal = ({ visible, onHide }) => {
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const { socket } = useSocket();
+    const { success, error: errorToast } = useToast();
 
     const validateEmail = (email) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,8 +40,12 @@ const InviteModal = ({ visible, onHide }) => {
             await inviteUser(email.trim(), socket);
             setEmail("");
             onHide();
+            success(
+                "User Invited Successfully",
+                "User is invited to chat room successfully"
+            );
         } catch (err) {
-            setError(err.message || "Failed to send invitation");
+            errorToast("Failed to send invitation", err?.message);
         } finally {
             setLoading(false);
         }

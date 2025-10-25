@@ -34,7 +34,7 @@ export const formatTime = (timestamp) => {
 export const groupMessagesBySender = (messages, currentUser) => {
     const groups = [];
 
-    messages.forEach((message, index) => {
+    messages.forEach((message) => {
         const isOwn = message.senderId === currentUser;
         const currentGroup = groups[groups.length - 1];
         if (!currentGroup || currentGroup.isOwn !== isOwn) {
@@ -91,6 +91,39 @@ export const formatDateSeparator = (timestamp) => {
     });
 };
 
+const showNotification = (user, message, avatar) => {
+    if (!("Notification" in window)) {
+        console.log("This browser does not support desktop notifications.");
+    } else if (Notification.permission === "granted") {
+        const notification = new Notification(`${user} sent a message`, {
+            body: message,
+            icon: avatar,
+            tag: "chat-message",
+        });
+        notification.onclick = () => {
+            window.focus();
+            notification.close();
+        };
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then((permission) => {
+            if (permission === "granted") {
+                const notification = new Notification(
+                    `${user} sent a message`,
+                    {
+                        body: message,
+                        icon: avatar,
+                        tag: "chat-message",
+                    }
+                );
+                notification.onclick = () => {
+                    window.focus();
+                    notification.close();
+                };
+            }
+        });
+    }
+};
+
 export const new_message = (
     content,
     currentChat,
@@ -99,8 +132,15 @@ export const new_message = (
     setUser
 ) => {
     setUser((t) => {
-        return t.map((u) =>
-            u.roomId === content.roomId
+        return t.map((u) => {
+            if (
+                u.roomId === content?.roomId &&
+                u.roomId !== currentChat?.roomId
+            ) {
+                showNotification(u.name, content.content, u.picture);
+            }
+
+            return u.roomId === content.roomId
                 ? u.roomId !== currentChat?.roomId
                     ? {
                           ...u,
@@ -108,8 +148,8 @@ export const new_message = (
                           lastMessage: content,
                       }
                     : { ...u, lastMessage: content }
-                : u
-        );
+                : u;
+        });
     });
     if (content.roomId === currentChat?.roomId) {
         setMessages((t) => [...t, content]);

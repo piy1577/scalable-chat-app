@@ -8,6 +8,7 @@ import {
 } from "react";
 import { useSocket } from "./SocketContext";
 import { getUsers } from "../services/user.service";
+import { useToast } from "./ToastContext";
 
 const UserContext = createContext(null);
 
@@ -18,13 +19,20 @@ const UserProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const { socket } = useSocket();
     const usersRef = useRef(users);
-
+    const { error } = useToast();
     useEffect(() => {
         usersRef.current = users;
     }, [users]);
 
     useEffect(() => {
-        getUsers(setUsers);
+        const fetchUsers = async () => {
+            try {
+                await getUsers(setUsers);
+            } catch (err) {
+                error("Error fetching Users", err.message);
+            }
+        };
+        fetchUsers();
     }, []);
 
     useEffect(() => {

@@ -4,10 +4,8 @@ const roomModel = require("../model/room.model");
 const userModel = require("../model/user.model");
 const DBService = require("../services/db.service");
 const { default: EmailService } = require("../services/email.service");
-// const RedisService = require("../services/Redis.service");
 
 const db = DBService.getInstance();
-// const redis = RedisService.getInstance();
 const emailSender = EmailService.getInstance();
 
 const validateEmail = (email) => {
@@ -305,13 +303,13 @@ const getUserMessage = async (req, res) => {
 
         const {
             limit = 50,
-            offset = 0,
+            page = 0,
             sortBy = "createdAt",
             sortOrder = "desc",
         } = req.query;
 
         const limitNum = parseInt(limit);
-        const offsetNum = parseInt(offset);
+        const pageNum = parseInt(page);
 
         if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
             return res.status(400).json({
@@ -319,20 +317,20 @@ const getUserMessage = async (req, res) => {
             });
         }
 
-        if (isNaN(offsetNum) || offsetNum < 0) {
+        if (isNaN(pageNum) || pageNum < 0) {
             return res.status(400).json({
                 message: "Offset must be a non-negative number",
             });
         }
 
         const sortOptions = {};
-        sortOptions[sortBy] = sortOrder === "asc" ? -1 : 1;
+        sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
 
         const messages = await db.find(messageModel, {
             query: { roomId },
             sort: sortOptions,
             limit: limitNum,
-            skip: offsetNum,
+            skip: pageNum * limitNum,
         });
         const totalCount = await db.count(messageModel, { roomId });
         const formattedMessages = messages.map((message) => ({
@@ -346,12 +344,12 @@ const getUserMessage = async (req, res) => {
 
         return res.status(200).json({
             message: "Messages retrieved successfully",
-            messages: formattedMessages,
+            messages: formattedMessages?.reverse(),
             pagination: {
                 total: totalCount,
                 limit: limitNum,
-                offset: offsetNum,
-                hasMore: offsetNum + limitNum < totalCount,
+                page: pageNum,
+                hasMore: (pageNum + 1) * limitNum < totalCount,
             },
             roomId,
         });
