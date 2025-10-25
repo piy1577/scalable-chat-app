@@ -3,7 +3,7 @@ const messageModel = require("../model/message.model");
 const roomModel = require("../model/room.model");
 const userModel = require("../model/user.model");
 const DBService = require("../services/db.service");
-const { default: EmailService } = require("../services/email.service");
+const EmailService = require("../services/email.service");
 
 const db = DBService.getInstance();
 const emailSender = EmailService.getInstance();
