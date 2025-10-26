@@ -42,14 +42,14 @@ class EmailService {
     async sendEmail({ to, subject, text, html, from }) {
         try {
             const info = await this.transporter.sendMail({
-                from: from || process.env.EMAIL_FROM || process.env.EMAIL_USER,
+                from: from || process.env.EMAIL_USER,
                 to,
                 subject,
                 text,
                 html,
             });
-
-            console.log(`📧 Email sent: ${info.messageId}`);
+            console.log("EMAIL: ", info);
+            console.log(`📧 Email sent: ${to}`);
             return info;
         } catch (err) {
             console.error("❌ Failed to send email:", err);

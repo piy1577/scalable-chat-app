@@ -55,6 +55,17 @@ const inviteUser = async (req, res) => {
 
         if (!targetUser) {
             try {
+                //check invitation already exists
+                const invite = await db.find(inviteModel, {
+                    query: { email, senderId: currentUserId },
+                    one: true,
+                });
+
+                if (invite)
+                    return res.status(409).json({
+                        message: "user already invited",
+                    });
+
                 await db.insert(inviteModel, {
                     email,
                     senderId: currentUserId,
@@ -65,7 +76,7 @@ const inviteUser = async (req, res) => {
                     text: `Hi there! You've been invited to join our chat application. Click the link below to get started:\n\n${
                         process.env.CLIENT_URL || "http://localhost:3000"
                     }\n\nBest regards,\nThe Chat App Team`,
-                    from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+                    from: process.env.EMAIL_USER,
                     html: `
                         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
                             <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
