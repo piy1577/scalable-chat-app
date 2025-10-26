@@ -44,7 +44,7 @@ async function refreshGoogleToken(refresh_token) {
 
 const authenticate = async (req, res, next) => {
     const { google_token } = req.cookies || {};
-    console.log("ACCESS_TOKEN: ", google_token);
+    console.log("ACCESS_TOKEN: ", req.cookies);
     if (!google_token)
         return res
             .status(401)
