@@ -1,4 +1,4 @@
-const url = process.env.REACT_SERVER_URL;
+const url = process.env.REACT_APP_SERVER_URL;
 const apiUtil = {
     get: async (relativeUrl) => {
         return await fetch(`${url}/api/${relativeUrl}`, {

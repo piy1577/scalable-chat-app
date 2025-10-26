@@ -19,6 +19,6 @@ export const logout = async (setUser) => {
 export const googleLogin = async (setLoading, setError) => {
     setLoading(true);
     setError("");
-    window.location.href = `${process.env.REACT_SERVER_URL}/api/auth/login`;
+    window.location.href = `${process.env.REACT_APP_SERVER_URL}/api/auth/login`;
     setLoading(false);
 };
