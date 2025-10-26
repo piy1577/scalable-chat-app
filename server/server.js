@@ -15,11 +15,7 @@ const server = http.createServer(app);
 connectSocket(server);
 app.use(
     cors({
-        origin: [
-            "http://localhost:3000",
-            "http://real-time-chat-app-3000.s3-website.ap-south-1.amazonaws.com",
-            "https://d26wu93n9u19t.cloudfront.net",
-        ],
+        origin: "https://d26wu93n9u19t.cloudfront.net",
         credentials: true,
     })
 );
