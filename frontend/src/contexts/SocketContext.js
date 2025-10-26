@@ -15,7 +15,7 @@ const SocketProvider = ({ children }) => {
     useEffect(() => {
         if (!user) return;
         if (!socket) {
-            const s = io(process.env.REACT_APP_SOCKET_URL, {
+            const s = io(process.env.REACT_SERVER_URL, {
                 transports: ["websocket"],
             });
 

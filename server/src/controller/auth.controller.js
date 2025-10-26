@@ -10,7 +10,7 @@ const cache = CacheService.getInstance();
 const db = DBService.getInstance();
 const client_id = process.env.GOOGLE_CLIENT_ID;
 const client_secret = process.env.GOOGLE_CLIENT_SECRET;
-
+const serverUrl = process.env.SERVER_URL;
 const validateEnvironmentVariables = () => {
     const requiredEnvVars = [
         "GOOGLE_CLIENT_ID",
@@ -26,11 +26,8 @@ const validateEnvironmentVariables = () => {
     }
 };
 
-const getRedirectUri = (req) => {
-    if (!req.get("host")) {
-        throw new Error("Host header is missing");
-    }
-    return `${req.protocol}://${req.get("host")}/api/auth/callback`;
+const getRedirectUri = () => {
+    return `${serverUrl}/api/auth/callback`;
 };
 
 const login = (req, res) => {
