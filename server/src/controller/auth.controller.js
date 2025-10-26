@@ -175,21 +175,14 @@ const callback = async (req, res) => {
                 query: { email: userInfo.email },
             });
         }
-        const cookieOptions = {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        };
-
-        res.cookie("google_token", tokenData.access_token, cookieOptions);
-
         if (tokenData.refresh_token) {
             await cache.set(tokenData.access_token, tokenData.refresh_token);
         }
 
+        // Store token in a way that frontend can access it
         const clientUrl = new URL(process.env.CLIENT_URL);
-        res.redirect(clientUrl.toString());
+        const redirectUrl = `${clientUrl.toString()}?token=${tokenData.access_token}`;
+        res.redirect(redirectUrl);
     } catch (err) {
         console.error("OAuth callback error:", err);
         const clientUrl = new URL(process.env.CLIENT_URL);
@@ -248,7 +241,8 @@ const status = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        const { google_token } = req.cookies || {};
+        const authHeader = req.headers.authorization;
+        const google_token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
 
         if (!google_token) {
             return res.status(400).json({
@@ -292,13 +286,6 @@ const logout = async (req, res) => {
         } catch (err) {
             console.error("Error deleting token from Redis:", err.message);
         }
-
-        res.clearCookie("google_token", {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-        });
 
         return res.status(200).json({
             message: "Logged out successfully",

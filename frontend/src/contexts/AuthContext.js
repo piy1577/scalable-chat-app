@@ -1,5 +1,9 @@
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
-import { checkAuthStatus, logout } from "../services/auth.service";
+import {
+    checkAuthStatus,
+    logout,
+    handleAuthCallback,
+} from "../services/auth.service";
 import { useToast } from "./ToastContext";
 
 const AuthContext = createContext(null);
@@ -12,6 +16,7 @@ export const AuthProvider = ({ children }) => {
     const { error } = useToast();
 
     useEffect(() => {
+        handleAuthCallback();
         checkAuthStatus(setUser, setLoading);
     }, []);
 

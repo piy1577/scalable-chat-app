@@ -13,6 +13,8 @@ export const checkAuthStatus = async (setUser, setLoading) => {
 
 export const logout = async (setUser) => {
     await apiUtil.get("auth/logout");
+    localStorage.removeItem("google_token");
+    console.log("Token removed from localStorage");
     setUser(null);
 };
 
@@ -21,4 +23,14 @@ export const googleLogin = async (setLoading, setError) => {
     setError("");
     window.location.href = `${process.env.REACT_APP_SERVER_URL}/api/auth/login`;
     setLoading(false);
+};
+
+export const handleAuthCallback = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+    if (token) {
+        localStorage.setItem("google_token", token);
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    }
 };

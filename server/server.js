@@ -3,7 +3,6 @@ const http = require("http");
 const cors = require("cors");
 const morgan = require("morgan");
 require("dotenv").config();
-const cookieParser = require("cookie-parser");
 const authRouter = require("./src/routes/auth.router");
 const userRouter = require("./src/routes/user.router");
 const errorHandler = require("./src/middleware/Error.middleware");
@@ -20,7 +19,6 @@ app.use(
     })
 );
 app.use(express.json());
-app.use(cookieParser());
 app.use(morgan("short"));
 app.use("/health", (req, res) => {
     res.json({ status: "OK", timestamp: new Date().toISOString() });

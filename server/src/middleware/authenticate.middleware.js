@@ -43,8 +43,9 @@ async function refreshGoogleToken(refresh_token) {
 }
 
 const authenticate = async (req, res, next) => {
-    const { google_token } = req.cookies || {};
-    console.log("ACCESS_TOKEN: ", req.cookies);
+    const authHeader = req.headers.authorization;
+    const google_token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+    console.log("ACCESS_TOKEN: ", google_token);
     if (!google_token)
         return res
             .status(401)
@@ -69,12 +70,8 @@ const authenticate = async (req, res, next) => {
             await cache.delete(google_token);
             await cache.set(newAccessToken, refresh_token);
 
-            res.cookie("google_token", newAccessToken, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-                maxAge: 7 * 24 * 60 * 60 * 1000,
-            });
+            // Set new token in response header for frontend to update localStorage
+            res.setHeader('X-New-Token', newAccessToken);
 
             userinfo = await getGoogleUser(newAccessToken);
             if (!userinfo)
