@@ -17,6 +17,7 @@ export const inviteUser = async (email, socket) => {
             });
         }
     } else {
-        throw new Error("Failed to send invitation");
+        const response = await res.json();
+        throw new Error(response.message);
     }
 };
