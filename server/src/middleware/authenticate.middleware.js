@@ -44,14 +44,21 @@ async function refreshGoogleToken(refresh_token) {
 
 const authenticate = async (req, res, next) => {
     const { google_token } = req.cookies || {};
-    if (!google_token) return res.status(401).json({ message: "UNAUTHORIZED" });
+    console.log("ACCESS_TOKEN: ", google_token);
+    if (!google_token)
+        return res
+            .status(401)
+            .json({ message: "UNAUTHORIZED", issue: "access token not found" });
 
     try {
         let userinfo = await getGoogleUser(google_token);
         if (!userinfo) {
             const refresh_token = await cache.get(google_token);
             if (!refresh_token)
-                return res.status(401).json({ message: "UNAUTHORIZED" });
+                return res.status(401).json({
+                    message: "UNAUTHORIZED",
+                    issue: "refresh token not found",
+                });
 
             const newAccessToken = await refreshGoogleToken(refresh_token);
             if (!newAccessToken)
