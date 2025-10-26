@@ -72,41 +72,35 @@ const inviteUser = async (req, res) => {
                 });
                 const mail = {
                     to: email,
-                    subject: "You're invited to join our Chat App!",
-                    text: `Hi there! You've been invited to join our chat application. Click the link below to get started:\n\n${
-                        process.env.CLIENT_URL || "http://localhost:3000"
-                    }\n\nBest regards,\nThe Chat App Team`,
-                    from: process.env.EMAIL_USER,
+                    subject: "You're invited to join Chat App!",
+                    from: '"Chat App Team" <21bcs107@nith.ac.in>',
+                    text: `Hi there!
+You've been invited to join our chat app. Click the link below to get started:
+
+${process.env.CLIENT_URL || "http://localhost:3000"}
+
+If you didn't expect this invitation, ignore this email.
+
+Best regards,
+Chat App Team`,
                     html: `
-                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-                            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                                <h1 style="color: #333; text-align: center; margin-bottom: 30px;">You're Invited!</h1>
-                                <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
-                                    Hi there! You've been invited to join our amazing chat application where you can connect with friends and colleagues in real-time.
-                                </p>
-                                <p style="color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-                                    Click the button below to get started and explore all the features we have to offer!
-                                </p>
-                                <div style="text-align: center; margin: 30px 0;">
-                                    <a href="${
-                                        process.env.CLIENT_URL ||
-                                        "http://localhost:3000"
-                                    }"
-                                       style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
-                                        Join Chat App
-                                    </a>
-                                </div>
-                                <p style="color: #999; font-size: 14px; text-align: center; margin-top: 30px;">
-                                    If you didn't expect this invitation, you can safely ignore this email.
-                                </p>
-                                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                                <p style="color: #999; font-size: 12px; text-align: center;">
-                                    Best regards,<br>The Chat App Team
-                                </p>
-                            </div>
-                        </div>
-                    `,
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background-color: white; padding: 20px; border-radius: 8px;">
+            <h2 style="text-align: center; color: #333;">You're Invited!</h2>
+            <p style="color: #555;">Hi there! Join our chat app to connect with friends and colleagues in real-time.</p>
+            <p style="text-align: center; margin: 20px 0;">
+                <a href="${process.env.CLIENT_URL || "http://localhost:3000"}"
+                   style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                    Join Chat App
+                </a>
+            </p>
+            <p style="font-size: 12px; color: #999; text-align: center;">
+                If you didn't expect this invitation, you can safely ignore this email.
+            </p>
+        </div>
+    </div>`,
                 };
+
                 await emailSender.sendEmail(mail);
                 return res.status(200).json({
                     message:

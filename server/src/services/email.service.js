@@ -47,6 +47,13 @@ class EmailService {
                 subject,
                 text,
                 html,
+                headers: {
+                    "X-Priority": "3",
+                    "X-Mailer": "Chat App Mailer",
+                    "List-Unsubscribe": `<${
+                        process.env.CLIENT_URL || "http://localhost:3000"
+                    }/unsubscribe>`,
+                },
             });
             console.log("EMAIL: ", info);
             console.log(`📧 Email sent: ${to}`);
