@@ -14,8 +14,10 @@ const server = http.createServer(app);
 connectSocket(server);
 app.use(
     cors({
-        origin: "https://d26wu93n9u19t.cloudfront.net",
-        credentials: true,
+        origin: [
+            "http://localhost:3000",
+            "https://d26wu93n9u19t.cloudfront.net",
+        ],
     })
 );
 app.use(express.json());
@@ -28,7 +30,7 @@ app.use("/api/user", userRouter);
 app.use(errorHandler);
 app.use("*", notFoundHanlder);
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
     console.info(`Server running on port ${PORT}`);
 });
 

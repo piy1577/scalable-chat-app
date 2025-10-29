@@ -15,7 +15,10 @@ let io;
 const connectSocket = (server) => {
     io = socketIo(server, {
         cors: {
-            origin: process.env.CLIENT_URL || "http://localhost:3000",
+            origin: [
+                "http://localhost:3000",
+                "https://d26wu93n9u19t.cloudfront.net",
+            ],
             methods: ["GET", "POST"],
         },
     });
