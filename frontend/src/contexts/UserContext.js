@@ -9,6 +9,7 @@ import {
 import { useSocket } from "./SocketContext";
 import { getUsers } from "../services/user.service";
 import { useToast } from "./ToastContext";
+import { useAuth } from "./AuthContext";
 
 const UserContext = createContext(null);
 
@@ -16,6 +17,7 @@ export const useUsers = () => useContext(UserContext);
 
 const UserProvider = ({ children }) => {
     const [users, setUsers] = useState([]);
+    const { auth } = useAuth();
     const [currentUser, setCurrentUser] = useState(null);
     const { socket } = useSocket();
     const usersRef = useRef(users);
@@ -27,13 +29,14 @@ const UserProvider = ({ children }) => {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                await getUsers(setUsers);
+                if (auth) await getUsers(setUsers);
+                else setUsers(null);
             } catch (err) {
                 error("Error fetching Users", err.message);
             }
         };
         fetchUsers();
-    }, []);
+    }, [auth]);
 
     useEffect(() => {
         if (!currentUser) return;

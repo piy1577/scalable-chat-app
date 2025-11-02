@@ -14,7 +14,10 @@ const server = http.createServer(app);
 connectSocket(server);
 app.use(
     cors({
-        origin: ["https://d26wu93n9u19t.cloudfront.net"],
+        origin: [
+            "http://localhost:3000",
+            "https://d26wu93n9u19t.cloudfront.net",
+        ],
     })
 );
 app.use(express.json());

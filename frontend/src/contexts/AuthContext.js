@@ -5,6 +5,8 @@ import {
     handleAuthCallback,
 } from "../services/auth.service";
 import { useToast } from "./ToastContext";
+import Loading from "../components/Home/Loading";
+import Login from "../components/Login/Login";
 
 const AuthContext = createContext(null);
 
@@ -13,7 +15,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const { error } = useToast();
+    const { success } = useToast();
 
     useEffect(() => {
         handleAuthCallback();
@@ -21,8 +23,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const handleLogout = async () => {
-        await logout(setUser);
-        error("Logout", "User Logout successfully");
+        await logout(setUser, success);
     };
 
     const value = useMemo(
@@ -34,7 +35,19 @@ export const AuthProvider = ({ children }) => {
         [user, loading]
     );
 
+    if (loading) {
+        return <Loading />;
+    }
+
+    if (!user) {
+        return <Login />;
+    }
+
     return (
-        <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+        <AuthContext.Provider value={value}>
+            <SocketProvider>
+                <UserProvider>{children}</UserProvider>
+            </SocketProvider>
+        </AuthContext.Provider>
     );
 };

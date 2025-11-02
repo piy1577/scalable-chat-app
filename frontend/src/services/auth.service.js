@@ -11,11 +11,14 @@ export const checkAuthStatus = async (setUser, setLoading) => {
     setLoading(false);
 };
 
-export const logout = async (setUser) => {
-    await apiUtil.get("auth/logout");
-    localStorage.removeItem("google_token");
-    console.log("Token removed from localStorage");
-    setUser(null);
+export const logout = async (setUser, success) => {
+    const res = await apiUtil.get("auth/logout");
+    if (res.ok) {
+        localStorage.removeItem("google_token");
+        console.log("Token removed from localStorage");
+        setUser(null);
+        success("Logout", "User Logout successfully");
+    }
 };
 
 export const googleLogin = async (setLoading, setError) => {
