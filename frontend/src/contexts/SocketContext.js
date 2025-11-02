@@ -32,7 +32,7 @@ const SocketProvider = ({ children }) => {
                 setSocket(null);
             }
         };
-    }, [user]);
+    }, [user, error, socket]);
 
     return (
         <SocketContext.Provider value={{ socket }}>

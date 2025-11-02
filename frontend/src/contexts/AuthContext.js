@@ -7,6 +7,8 @@ import {
 import { useToast } from "./ToastContext";
 import Loading from "../components/Home/Loading";
 import Login from "../components/Login/Login";
+import SocketProvider from "./SocketContext";
+import UserProvider from "./UserContext";
 
 const AuthContext = createContext(null);
 

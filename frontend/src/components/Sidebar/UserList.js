@@ -13,7 +13,7 @@ const UserList = () => {
 
     return (
         <div className="sidebar-content">
-            {users.length > 0 ? (
+            {users?.length > 0 ? (
                 <div className="contacts-list">
                     {users.map((u) => (
                         <UserItem

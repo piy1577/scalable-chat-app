@@ -16,7 +16,7 @@ export const useChatState = () => {
     const { error } = useToast();
 
     useEffect(() => {
-        if (currentUser) {
+        if (currentUser?.roomId) {
             const fetchMessages = async () => {
                 try {
                     await getMessages(
@@ -32,7 +32,7 @@ export const useChatState = () => {
             };
             fetchMessages();
         }
-    }, [currentUser?.roomId]);
+    }, [currentUser?.roomId, error]);
 
     useEffect(() => {
         if (!socket) return;
