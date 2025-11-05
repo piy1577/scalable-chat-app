@@ -8,7 +8,7 @@ const handler = async (event) => {
         try {
             const sns = record.Sns;
             const subject = sns.Subject;
-            const message = JSON.parse(record.Message);
+            const message = JSON.parse(sns.Message);
 
             const { roomId, senderId, content } = message || {};
 
