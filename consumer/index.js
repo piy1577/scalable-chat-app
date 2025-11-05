@@ -1,7 +1,7 @@
 const DBService = require("./service/db.service");
 const messageModel = require("./model/message.model");
 
-export const handler = async (event) => {
+const handler = async (event) => {
     const db = DBService.getInstance();
 
     for (const record of event.Records) {
@@ -40,3 +40,5 @@ export const handler = async (event) => {
         }
     }
 };
+
+module.exports = { handler };
