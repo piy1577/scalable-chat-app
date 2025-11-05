@@ -14,7 +14,6 @@ const UserProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const { socket } = useSocket();
     const { error } = useToast();
-    console.log(user);
     useEffect(() => {
         const fetchUsers = async () => {
             try {

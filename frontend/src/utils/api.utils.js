@@ -1,23 +1,22 @@
 const url = process.env.REACT_APP_SERVER_URL;
 
 const getAuthHeaders = () => {
-    const token = localStorage.getItem('google_token');
+    const token = localStorage.getItem("google_token");
     const headers = {
         "Content-Type": "application/json",
     };
 
     if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers["Authorization"] = `Bearer ${token}`;
     }
 
     return headers;
 };
 
 const handleTokenRefresh = (response) => {
-    const newToken = response.headers.get('X-New-Token');
+    const newToken = response.headers.get("X-New-Token");
     if (newToken) {
-        localStorage.setItem('google_token', newToken);
-        console.log('Token refreshed and stored in localStorage');
+        localStorage.setItem("google_token", newToken);
     }
     return response;
 };

@@ -1,0 +1,346 @@
+# Frontend API Endpoints Documentation
+
+This document outlines all API endpoints used by the frontend application to communicate with the chat server.
+
+## Base URL
+```
+http://localhost:3001 (development)
+```
+
+## Authentication Endpoints
+
+### Google OAuth Login
+- **Endpoint**: `GET /api/auth/login`
+- **Description**: Initiates Google OAuth authentication flow
+- **Response**: Redirects to Google OAuth consent screen
+- **Frontend Usage**: Redirect user to this URL to start login process
+
+### OAuth Callback
+- **Endpoint**: `GET /api/auth/callback`
+- **Description**: Handles OAuth callback from Google
+- **Response**: Redirects to frontend with access token in URL params
+- **Frontend Usage**: Extract token from URL after redirect
+
+### Get User Status
+- **Endpoint**: `GET /api/auth/`
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Description**: Get current authenticated user information
+- **Response**:
+  ```json
+  {
+    "id": "google_user_id",
+    "email": "user@example.com",
+    "name": "User Name",
+    "picture": "https://profile.url",
+    "isActive": true,
+    "lastLogin": "2025-11-02T12:00:00.000Z"
+  }
+  ```
+- **Frontend Usage**: Called after login to get user data
+
+### Logout
+- **Endpoint**: `GET /api/auth/logout`
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Description**: Logout user and revoke tokens
+- **Response**:
+  ```json
+  {
+    "message": "Logged out successfully",
+    "timestamp": "2025-11-02T12:00:00.000Z"
+  }
+  ```
+- **Frontend Usage**: Clear local storage and redirect to login
+
+## User Management Endpoints
+
+### Get All Chat Users
+- **Endpoint**: `GET /api/user/`
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Description**: Get all users the current user has chatted with, including message summaries
+- **Response**:
+  ```json
+  [
+    {
+      "roomId": "mongodb_room_id",
+      "unreadCount": 2,
+      "lastMessage": {
+        "content": "Hello!",
+        "senderId": "user_id",
+        "createdAt": "2025-11-02T12:00:00.000Z",
+        "seen": false
+      },
+      "userId": "other_user_id",
+      "name": "Other User",
+      "email": "other@example.com",
+      "picture": "https://profile.url",
+      "updatedAt": "2025-11-02T12:00:00.000Z",
+      "isActive": true
+    }
+  ]
+  ```
+- **Frontend Usage**: Display user list in sidebar
+
+### Invite User
+- **Endpoint**: `POST /api/user/`
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  Content-Type: application/json
+  ```
+- **Body**:
+  ```json
+  {
+    "email": "friend@example.com"
+  }
+  ```
+- **Description**: Send invitation to a user via email
+- **Response**:
+  ```json
+  {
+    "message": "Invitation sent successfully. User will be notified when they join.",
+    "invitedEmail": "friend@example.com"
+  }
+  ```
+- **Error Responses**:
+  - `400`: Invalid email format or trying to invite yourself
+  - `409`: User already invited or chat room already exists
+- **Frontend Usage**: Invite modal/form submission
+
+### Get Room Messages
+- **Endpoint**: `GET /api/user/:roomId`
+- **Headers**:
+  ```
+  Authorization: Bearer <access_token>
+  ```
+- **Query Parameters**:
+  - `limit` (optional): Number of messages to fetch (default: 50, max: 100)
+  - `page` (optional): Page number for pagination (default: 0)
+  - `sortBy` (optional): Sort field (default: "createdAt")
+  - `sortOrder` (optional): Sort order "asc" or "desc" (default: "desc")
+- **Description**: Get messages for a specific chat room
+- **Response**:
+  ```json
+  {
+    "message": "Messages retrieved successfully",
+    "messages": [
+      {
+        "id": "message_id",
+        "roomId": "room_id",
+        "senderId": "user_id",
+        "content": "Hello world!",
+        "seen": false,
+        "createdAt": "2025-11-02T12:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 150,
+      "limit": 50,
+      "page": 0,
+      "hasMore": true
+    },
+    "roomId": "room_id"
+  }
+  ```
+- **Frontend Usage**: Load messages when opening a chat room
+
+## Health Check
+
+### Server Health
+- **Endpoint**: `GET /health`
+- **Description**: Check server health status
+- **Response**:
+  ```json
+  {
+    "status": "OK",
+    "timestamp": "2025-11-02T12:00:00.000Z"
+  }
+  ```
+- **Frontend Usage**: Health monitoring (optional)
+
+## Socket.IO Events
+
+### Client to Server Events
+
+#### Register User
+- **Event**: `register`
+- **Data**:
+  ```json
+  {
+    "userId": "google_user_id"
+  }
+  ```
+- **Description**: Register user socket connection
+- **Frontend Usage**: Called when socket connects
+
+#### Send Message
+- **Event**: `send_message`
+- **Data**:
+  ```json
+  {
+    "content": "Hello world!",
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: Send a message to a chat room
+- **Frontend Usage**: When user sends a message
+
+#### Mark Messages as Seen
+- **Event**: `seen_message`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: Mark all messages in a room as seen
+- **Frontend Usage**: When user views a chat room
+
+#### Start Typing
+- **Event**: `start_typing`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: Indicate user started typing
+- **Frontend Usage**: When user focuses on message input
+
+#### Stop Typing
+- **Event**: `stop_typing`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: Indicate user stopped typing
+- **Frontend Usage**: When user blurs message input or sends message
+
+#### Update Users in Room
+- **Event**: `update_users`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id",
+    "participants": ["user1", "user2"]
+  }
+  ```
+- **Description**: Update users in a room
+- **Frontend Usage**: Internal room management
+
+#### Add Room
+- **Event**: `add_room`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: Add user to a room
+- **Frontend Usage**: When joining a new chat room
+
+### Server to Client Events
+
+#### New Message
+- **Event**: `new_message`
+- **Data**: Message object (same as in GET messages response)
+- **Description**: New message received in a room
+- **Frontend Usage**: Add message to chat UI
+
+#### Message Seen
+- **Event**: `message_seen`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: Messages in room marked as seen
+- **Frontend Usage**: Update message read status
+
+#### User Typing
+- **Event**: `typing`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: User started typing in room
+- **Frontend Usage**: Show typing indicator
+
+#### User Stopped Typing
+- **Event**: `stopped_typing`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: User stopped typing in room
+- **Frontend Usage**: Hide typing indicator
+
+#### Refresh Users
+- **Event**: `get_users`
+- **Data**: None
+- **Description**: Request to refresh user list
+- **Frontend Usage**: Trigger user list refresh
+
+#### Room Added
+- **Event**: `add_room`
+- **Data**:
+  ```json
+  {
+    "roomId": "room_id"
+  }
+  ```
+- **Description**: Room added notification
+- **Frontend Usage**: Handle new room creation
+
+#### Error
+- **Event**: `error`
+- **Data**:
+  ```json
+  {
+    "message": "Error description"
+  }
+  ```
+- **Description**: Error occurred
+- **Frontend Usage**: Display error to user
+
+## Error Handling
+
+All API endpoints return errors in the following format:
+```json
+{
+  "message": "Error description",
+  "error": "Detailed error (only in development)"
+}
+```
+
+Common HTTP status codes:
+- `400`: Bad Request (validation errors)
+- `401`: Unauthorized (missing/invalid token)
+- `404`: Not Found (room/user not found)
+- `409`: Conflict (duplicate invitation/room)
+- `500`: Internal Server Error
+
+## Frontend Integration Notes
+
+1. **Token Management**: Store access token in localStorage after login
+2. **Socket Connection**: Connect to Socket.IO after authentication
+3. **Error Handling**: Implement global error handling for API calls
+4. **Real-time Updates**: Listen to Socket.IO events for live updates
+5. **Pagination**: Use pagination parameters for message loading
+6. **Typing Indicators**: Debounce typing events to avoid spam
+7. **Message Status**: Track read/unread status for UX
