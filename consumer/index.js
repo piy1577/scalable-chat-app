@@ -3,26 +3,38 @@ const messageModel = require("./model/message.model");
 
 export const handler = async (event) => {
     const db = DBService.getInstance();
-    const results = [];
+
     for (const record of event.Records) {
         try {
-            const body = JSON.parse(record.body);
+            const sns = record.Sns;
+            const subject = sns.Subject;
+            const message = JSON.parse(record.Message);
 
-            const { roomId, senderId, content } = body || {};
+            const { roomId, senderId, content } = message || {};
 
-            if (!roomId || !senderId || !content) {
-                console.warn("Invalid message format:", body);
-                continue;
+            if (subject === "send_message") {
+                if (!roomId || !senderId || !content) {
+                    console.warn("Invalid message format:", message);
+                    continue;
+                }
+
+                const result = await db.insert(messageModel, {
+                    roomId,
+                    senderId,
+                    content,
+                });
+                console.log("Inserted message", result);
+            } else {
+                if (!roomId || !senderId) {
+                    console.warn("Invalid message format:", message);
+                    continue;
+                }
+                const result = await db.update(messageModel, {
+                    query: { roomId, seen: false, senderId: { $ne: senderId } },
+                    data: { $set: { seen: true } },
+                });
+                console.log("message marked as seen", result);
             }
-
-            const result = await db.insert(messageModel, {
-                roomId,
-                senderId,
-                content,
-            });
-
-            console.log("Inserted message", result);
-            results.push(result);
         } catch (err) {
             console.log(err, record);
         }

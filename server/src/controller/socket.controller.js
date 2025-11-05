@@ -2,10 +2,12 @@ const messageModel = require("../model/message.model");
 const userModel = require("../model/user.model");
 const roomModel = require("../model/room.model");
 const DBService = require("../services/db.service");
+const NotificationService = require("../services/Notification.service");
 
 const users = new Map();
 const rooms = new Map();
 const db = DBService.getInstance();
+const notify = NotificationService.getInstance();
 
 const validateInput = (data, requiredFields) => {
     if (!data || typeof data !== "object") {
@@ -68,8 +70,8 @@ const sendMessage = async (socket, data) => {
             content: content.trim(),
         };
 
-        const savedMessage = await db.insert(messageModel, messageData);
-        socket.to(roomId).emit("new_message", savedMessage);
+        await notify.sendMessage(roomId, userId, content.trim());
+        socket.to(roomId).emit("new_message", messageData);
     } catch (err) {
         console.error("Send message error:", err);
         socket.emit("error", {
@@ -89,10 +91,7 @@ const seenMessage = async (socket, data) => {
             throw new Error("User not authenticated");
         }
 
-        await db.update(messageModel, {
-            query: { roomId, seen: false, senderId: { $ne: userId } },
-            data: { $set: { seen: true } },
-        });
+        await notify.seenMessage(roomId, userId);
         socket.to(roomId).emit("message_seen", { roomId });
     } catch (err) {
         console.error("Mark message seen error:", err);
