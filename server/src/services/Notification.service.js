@@ -5,14 +5,20 @@ const region = "ap-south-1";
 class NotificationService {
     static instance = null;
 
+    constructor() {
+        if (NotificationService.instance) return NotificationService.instance;
+        this.notify = new SNS({ region });
+    }
+
     static getInstance = () => {
-        if (!instance) instance = new SNS({ region });
-        return instance;
+        if (!NotificationService.instance)
+            NotificationService.instance = new NotificationService();
+        return NotificationService.instance;
     };
 
     sendMessage = async (roomId, senderId, content) => {
-        if (!instance) return;
-        await instance
+        if (!this.notify) return;
+        await this.notify
             .publish({
                 TopicArn: SNS_ARN,
                 Subject: "send_message",
@@ -22,8 +28,8 @@ class NotificationService {
     };
 
     seenMessage = async (roomId, senderId) => {
-        if (!instance) return;
-        await instance
+        if (!this.notify) return;
+        await this.notify
             .publish({
                 TopicArn: SNS_ARN,
                 Subject: "seen_message",
