@@ -15,10 +15,7 @@ let io;
 const connectSocket = (server) => {
     io = socketIo(server, {
         cors: {
-            origin: [
-                "http://localhost:3000",
-                "https://d26wu93n9u19t.cloudfront.net",
-            ],
+            origin: "https://d26wu93n9u19t.cloudfront.net",
             methods: ["GET", "POST"],
         },
     });
