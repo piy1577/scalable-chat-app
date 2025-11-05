@@ -3,7 +3,7 @@ const messageModel = require("./model/message.model");
 
 const handler = async (event) => {
     const db = DBService.getInstance();
-
+    console.log("EVENT", event);
     for (const record of event.Records) {
         try {
             const sns = record.Sns;
