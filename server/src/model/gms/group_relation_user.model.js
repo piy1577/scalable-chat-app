@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const groupRelationUserSchema = new mongoose.Schema(
     {
-        groupId: { type: mongoose.Schema.ObjectId, required: true },
+        groupId: {
+            type: mongoose.Schema.ObjectId,
+            ref: "gms_group",
+            required: true,
+        },
         userId: { type: String, ref: "ums_user", required: true },
         isAdmin: { type: Boolean, default: false },
     },
