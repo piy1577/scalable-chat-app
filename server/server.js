@@ -53,6 +53,11 @@ app.use("/mms"); // message management service
  * /get all message
  */
 
+
+/**
+ * new branch -> pull then -> git checkout -b branchName
+ * switch branch -> git checkout branchName
+ */
 app.use("*", notFoundHanlder);
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, "0.0.0.0", () => {
