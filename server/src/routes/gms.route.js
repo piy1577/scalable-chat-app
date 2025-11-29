@@ -1,20 +1,20 @@
 const { Router } = require("express");
+const createGroupController = require("../controller/gms/createGroup.controller");
+const addUserController = require("../controller/gms/addUser.controller");
+const getAllGroupsController = require("../controller/gms/getAllGroups.controller");
+const leaveGroupController = require("../controller/gms/leaveGroup.controller");
+const removeUserController = require("../controller/gms/removeUser.controller");
+const groupInfoController = require("../controller/gms/groupInfo.controller");
+const deleteGroupController = require("../controller/gms/deleteGroup.controller");
 
 const gmsRouter = Router();
 
-/**
- * /create group
- * /add user to group
- * /leave grp
- * /remove user
- * /message info
- */
-
-gmsRouter.post("/");
-gmsRouter.post("/:id/addUser");
-gmsRouter.post("/:id/leave");
-gmsRouter.post("/:id/removeUser");
-gmsRouter.get("/:id/info");
-gmsRouter.delete("/:id");
+gmsRouter.get("/", getAllGroupsController);
+gmsRouter.post("/", createGroupController);
+gmsRouter.post("/:id/addUser", addUserController);
+gmsRouter.post("/:id/leave", leaveGroupController);
+gmsRouter.post("/:id/removeUser", removeUserController);
+gmsRouter.get("/:id/info", groupInfoController);
+gmsRouter.delete("/:id", deleteGroupController);
 
 module.exports = gmsRouter;
