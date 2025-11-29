@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const groupRelationUserModel = require("./group_relation_user.model");
 
 const groupSchema = new mongoose.Schema(
     {
