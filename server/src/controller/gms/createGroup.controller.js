@@ -12,8 +12,9 @@ module.exports = async (req, res) => {
 
     try {
         conn = await db.startTransaction();
-        //create group
-        const group = await db.insertOne(
+
+        // 1. Create group
+        const [group] = await db.insertOne(
             groupModel,
             {
                 name,
@@ -23,19 +24,32 @@ module.exports = async (req, res) => {
             conn
         );
 
-        // create admin user
+        // 2. Create admin user relation
         await db.insertOne(
             groupRelationUserModel,
-            { groupId: group._id, userId: currentUserId, isAdmin: true },
+            {
+                groupId: group._id,
+                userId: currentUserId,
+                isAdmin: true,
+            },
             conn
         );
 
         await db.commitTransaction(conn);
+
+        return res.status(201).json({
+            message: "Group created successfully",
+            group,
+        });
     } catch (err) {
-        await db.rollbackTransaction(conn);
-        console.log("create Group error: ", err);
-        res.status(500).json({ message: "Unable to create group", error: err });
+        if (conn) await db.rollbackTransaction(conn);
+        console.error("create Group error: ", err);
+
+        return res.status(500).json({
+            message: "Unable to create group",
+            error: err.message,
+        });
     } finally {
-        await db.endTransaction(conn);
+        if (conn) await db.endTransaction(conn);
     }
 };
