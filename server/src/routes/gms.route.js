@@ -11,10 +11,10 @@ const gmsRouter = Router();
 
 gmsRouter.get("/", getAllGroupsController);
 gmsRouter.post("/", createGroupController);
-gmsRouter.post("/:id/addUser", addUserController);
 gmsRouter.post("/:id/leave", leaveGroupController);
-gmsRouter.post("/:id/removeUser/:userId", removeUserController);
 gmsRouter.get("/:id/info", groupInfoController);
 gmsRouter.delete("/:id", deleteGroupController);
+gmsRouter.post("/:id/addUser/:userId", addUserController);
+gmsRouter.post("/:id/removeUser/:userId", removeUserController);
 
 module.exports = gmsRouter;
