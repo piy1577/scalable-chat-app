@@ -25,7 +25,7 @@ class CacheService {
         return CacheService.instance;
     }
 
-    async set(key, value, expiryInSeconds = null) {
+    set(key, value, expiryInSeconds = null) {
         try {
             if (expiryInSeconds) this.cache.set(key, value, expiryInSeconds);
             else this.cache.set(key, value);
@@ -34,7 +34,7 @@ class CacheService {
         }
     }
 
-    async get(key) {
+    get(key) {
         try {
             const value = this.cache.get(key);
             return value === undefined ? null : value;
@@ -44,20 +44,11 @@ class CacheService {
         }
     }
 
-    async delete(key) {
+    delete(key) {
         try {
             this.cache.del(key);
         } catch (err) {
             console.error(`Cache DEL error for key: ${key}`, err);
-        }
-    }
-
-    async flushAll() {
-        try {
-            this.cache.flushAll();
-            console.log("🗑️ Cache cleared");
-        } catch (err) {
-            console.error("Cache FLUSH error", err);
         }
     }
 }
