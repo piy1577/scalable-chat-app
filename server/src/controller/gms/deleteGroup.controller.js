@@ -6,9 +6,26 @@ const db = new DBService();
 module.exports = async (req, res) => {
     let conn;
     const { id } = req.params;
+    const { id: currentUserId } = req.userinfo;
+
     try {
         conn = await db.startTransaction();
 
+        // 1. fetch group
+        const group = await db.find(
+            groupModel,
+            { query: { _id: id }, one: true },
+            conn
+        );
+
+        // 2. permission check
+        if (!group || group.createdBy !== currentUserId) {
+            return res.status(403).json({
+                message: "user don't have permission for this operation",
+            });
+        }
+
+        // 3. delete group
         await db.delete(groupModel, { query: { _id: id }, one: true }, conn);
 
         await db.commitTransaction(conn);
