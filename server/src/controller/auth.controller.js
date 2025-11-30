@@ -9,45 +9,6 @@ const messageModel = require("../model/message.model");
 const cache = CacheService.getInstance();
 const db = DBService.getInstance();
 const client_id = process.env.GOOGLE_CLIENT_ID;
-const client_secret = process.env.GOOGLE_CLIENT_SECRET;
-const serverUrl = process.env.SERVER_URL;
-const validateEnvironmentVariables = () => {
-    const requiredEnvVars = [
-        "GOOGLE_CLIENT_ID",
-        "GOOGLE_CLIENT_SECRET",
-        "CLIENT_URL",
-    ];
-    const missing = requiredEnvVars.filter((envVar) => !process.env[envVar]);
-
-    if (missing.length > 0) {
-        throw new Error(
-            `Missing required environment variables: ${missing.join(", ")}`
-        );
-    }
-};
-
-const getRedirectUri = () => {
-    return `${serverUrl}/api/auth/callback`;
-};
-
-const login = (req, res) => {
-    try {
-        validateEnvironmentVariables();
-
-        const redirect_uri = getRedirectUri(req);
-        const loginUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${client_id}&redirect_uri=${redirect_uri}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
-        res.redirect(loginUrl);
-    } catch (err) {
-        console.error("Login error:", err.message);
-        res.status(500).json({
-            message: "Authentication service unavailable",
-            error:
-                process.env.NODE_ENV === "development"
-                    ? err.message
-                    : undefined,
-        });
-    }
-};
 
 const callback = async (req, res) => {
     try {
@@ -181,7 +142,9 @@ const callback = async (req, res) => {
 
         // Store token in a way that frontend can access it
         const clientUrl = new URL(process.env.CLIENT_URL);
-        const redirectUrl = `${clientUrl.toString()}?token=${tokenData.access_token}`;
+        const redirectUrl = `${clientUrl.toString()}?token=${
+            tokenData.access_token
+        }`;
         res.redirect(redirectUrl);
     } catch (err) {
         console.error("OAuth callback error:", err);
@@ -242,7 +205,10 @@ const status = async (req, res) => {
 const logout = async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
-        const google_token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+        const google_token =
+            authHeader && authHeader.startsWith("Bearer ")
+                ? authHeader.substring(7)
+                : null;
 
         if (!google_token) {
             return res.status(400).json({
