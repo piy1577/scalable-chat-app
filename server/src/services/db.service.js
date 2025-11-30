@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 
 class DBService {
     static instance = null;
-    connection = null;
 
     constructor() {
         if (DBService.instance) return DBService.instance;
@@ -12,13 +11,10 @@ class DBService {
     static getInstance() {
         if (!DBService.instance) {
             DBService.instance = new DBService();
-            mongoose.connect(
-                process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/test",
-                {
-                    autoIndex: true,
-                    connectTimeoutMS: 10000,
-                }
-            );
+            mongoose.connect(process.env.MONGODB_URI, {
+                autoIndex: true,
+                connectTimeoutMS: 10000,
+            });
             console.log("CONNECTED TO MONGODB");
         }
         return DBService.instance;
@@ -35,24 +31,23 @@ class DBService {
     }
 
     async commitTransaction(connection) {
-        if (!connection) return;
-        await connection.commitTransaction();
+        if (connection) await connection.commitTransaction();
     }
 
     async rollbackTransaction(connection) {
-        if (!connection) return;
-        await connection.abortTransaction();
+        if (connection) await connection.abortTransaction();
     }
 
     async endTransaction(connection) {
-        if (!connection) return;
-        await connection.endSession();
+        if (connection) await connection.endSession();
     }
 
-    async insert(model, data) {
-        const row = new model(data);
-        const saved = await row.save();
-        return saved;
+    async insertOne(model, data, connection) {
+        return await model.create([data], { session: connection });
+    }
+
+    async insertMany(model, data, connection) {
+        return await model.insertMany(data, { session: connection });
     }
 
     async find(
@@ -64,50 +59,57 @@ class DBService {
             sort: null,
             limit: null,
             skip: null,
-        }
+        },
+        connection
     ) {
         const { one, query, exclude, sort, limit, skip } = options;
 
-        let queryBuilder = model.find(query, exclude);
+        let queryBuilder = one
+            ? model.findOne(query, exclude)
+            : model.find(query, exclude);
 
         if (sort) queryBuilder = queryBuilder.sort(sort);
-        if (limit) queryBuilder = queryBuilder.limit(limit);
-        if (skip) queryBuilder = queryBuilder.skip(skip);
-
-        if (one) {
-            return await model.findOne(query, exclude);
-        }
+        if (limit !== null && limit !== undefined)
+            queryBuilder = queryBuilder.limit(limit);
+        if (skip !== null && skip !== undefined)
+            queryBuilder = queryBuilder.skip(skip);
+        if (connection) queryBuilder = queryBuilder.session(connection);
 
         return await queryBuilder.exec();
     }
 
     async update(
         model,
-        options = { query: {}, data: {}, one: false, upsert: false }
+        options = { query: {}, data: {}, one: false, upsert: false },
+        connection
     ) {
         if (options.one) {
             return await model.findOneAndUpdate(options.query, options.data, {
                 new: true,
                 upsert: options.upsert,
-            });
-        } else {
-            // Update multiple documents
-            return await model.updateMany(options.query, options.data, {
-                upsert: options.upsert,
+                session: connection,
             });
         }
+
+        return await model.updateMany(options.query, options.data, {
+            upsert: options.upsert,
+            session: connection,
+        });
     }
 
-    async count(model, query) {
-        return await model.countDocuments(query);
+    async count(model, filter, connection) {
+        let q = model.countDocuments(filter);
+        if (connection) q = q.session(connection);
+        return await q.exec();
     }
 
-    async delete(model, options = { query: {}, one: false }) {
-        if (options.one) {
-            return await model.findOneAndDelete(options.query);
-        } else {
-            return await model.deleteMany(options.query);
-        }
+    async delete(model, options = { query: {}, one: false }, connection) {
+        let query = options.one
+            ? model.findOneAndDelete(options.query)
+            : model.deleteMany(options.query);
+
+        if (connection) query = query.session(connection);
+        return await query.exec();
     }
 }
 
