@@ -1,36 +1,9 @@
-const GOOGLE = require("../../constants/google.const");
-const CONTENT_TYPE = require("../../constants/HTTP_CONTENT_TYPE.const");
-const METHODS = require("../../constants/HTTP_METHOD.const");
 const { ReasonPhrases, StatusCodes } = require("http-status-codes");
 
 const DBService = require("../../services/db.service");
 const userModel = require("../../model/ums/user.model");
 
 const db = new DBService();
-
-const generatetoken = async (code) => {
-    const res = await fetch(GOOGLE.TOKEN_URL, {
-        method: METHODS.POST,
-        headers: {
-            [CONTENT_TYPE.CONTENT_TYPE]: CONTENT_TYPE.urlEncoded,
-        },
-        body: new URLSearchParams({
-            client_id: GOOGLE.CLIENT_ID,
-            client_secret: GOOGLE.CLIENT_SECRET,
-            redirect_uri: GOOGLE.REDIRECT_URI,
-            code,
-            grant_type: GOOGLE.GRANT_TYPE,
-        }),
-    });
-    return await res.json();
-};
-
-const getProfile = async (token) => {
-    const res = await fetch(GOOGLE.PROFILE_URL, {
-        headers: { Authorization: `Bearer ${token}` },
-    });
-    return await res.json();
-};
 
 module.exports = async (req, res) => {
     const { code, error: oauthError } = req.query;
@@ -91,10 +64,18 @@ module.exports = async (req, res) => {
             conn
         );
 
-        if (tokenData.refresh_token) {
-            await cache.set(tokenData.access_token, tokenData.refresh_token);
-        }
-
-        
-    } catch (err) {}
+        await db.commitTransaction(conn);
+        const clientUrl = new URL(process.env.CLIENT_URL);
+        const redirectUrl = `${clientUrl.toString()}?token=${
+            tokenData.access_token
+        }`;
+        res.redirect(redirectUrl);
+    } catch (err) {
+        await db.rollbackTransaction(conn);
+        console.error("OAuth callback error:", err);
+        const clientUrl = new URL(process.env.CLIENT_URL);
+        res.redirect(clientUrl.toString());
+    } finally {
+        await db.endTransaction(conn);
+    }
 };

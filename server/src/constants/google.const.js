@@ -7,6 +7,7 @@ const redirect_uri = `${serverUrl}/api/ums/callback`;
 module.exports = {
     LOGIN_URL: "https://accounts.google.com/o/oauth2/v2/auth",
     TOKEN_URL: "https://oauth2.googleapis.com/token",
+    REVOKE_TOKEN_URL: "https://oauth2.googleapis.com/revoke",
     PROFILE_URL: "https://www.googleapis.com/oauth2/v2/userinfo",
     CLIENT_ID: client_id,
     CLIENT_SECRET: client_secret,
