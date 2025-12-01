@@ -22,10 +22,9 @@ module.exports = async (req, res) => {
         });
     } catch (err) {
         console.error("Logout error:", err);
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             code: ReasonPhrases.INTERNAL_SERVER_ERROR,
-            message: "Logout failed",
-            error: err.message,
+            error: err,
         });
     }
 };

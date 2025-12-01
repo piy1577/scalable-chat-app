@@ -4,17 +4,29 @@ const addUserController = require("../controller/gms/addUser.controller");
 const getAllGroupsController = require("../controller/gms/getAllGroups.controller");
 const leaveGroupController = require("../controller/gms/leaveGroup.controller");
 const removeUserController = require("../controller/gms/removeUser.controller");
-const groupInfoController = require("../controller/gms/groupInfo.controller");
 const deleteGroupController = require("../controller/gms/deleteGroup.controller");
+const authenticateMiddleware = require("../middleware/ums/authenticate.middleware");
+const checkGroupAdminMiddleware = require("../middleware/gms/checkGroupAdmin.middleware");
+const checkUserExistsMiddleware = require("../middleware/ums/checkUserExists.middleware");
 
 const gmsRouter = Router();
 
-gmsRouter.get("/", getAllGroupsController);
-gmsRouter.post("/", createGroupController);
-gmsRouter.post("/:id/leave", leaveGroupController);
-gmsRouter.get("/:id/info", groupInfoController);
-gmsRouter.delete("/:id", deleteGroupController);
-gmsRouter.post("/:id/addUser/:userId", addUserController);
-gmsRouter.post("/:id/removeUser/:userId", removeUserController);
+gmsRouter.get("/", authenticateMiddleware, getAllGroupsController);
+gmsRouter.post("/", authenticateMiddleware, createGroupController);
+gmsRouter.post("/:id/leave", authenticateMiddleware, leaveGroupController);
+gmsRouter.delete("/:id", authenticateMiddleware, deleteGroupController);
+gmsRouter.post(
+    "/:id/addUser",
+    authenticateMiddleware,
+    checkGroupAdminMiddleware,
+    checkUserExistsMiddleware,
+    addUserController
+);
+gmsRouter.post(
+    "/:id/removeUser/:userId",
+    authenticateMiddleware,
+    checkGroupAdminMiddleware,
+    removeUserController
+);
 
 module.exports = gmsRouter;

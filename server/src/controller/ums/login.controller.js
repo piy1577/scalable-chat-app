@@ -1,3 +1,4 @@
+const { StatusCodes, ReasonPhrases } = require("http-status-codes");
 const GOOGLE = require("../../constants/google.const");
 
 module.exports = (req, res) => {
@@ -6,9 +7,9 @@ module.exports = (req, res) => {
         res.redirect(loginUrl);
     } catch (err) {
         console.error("Login error:", err.message);
-        res.status(500).json({
-            message: "Authentication service unavailable",
-            error: err.message,
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            code: ReasonPhrases.INTERNAL_SERVER_ERROR,
+            error: err,
         });
     }
 };

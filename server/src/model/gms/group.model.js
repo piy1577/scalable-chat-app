@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const groupRelationUserModel = require("./group_relation_user.model");
+const messageModel = require("../mms/messages.model");
 
 const groupSchema = new mongoose.Schema(
     {
@@ -17,6 +18,7 @@ groupSchema.pre(
     async function (next) {
         const groupId = this._id;
         await groupRelationUserModel.deleteMany({ groupId });
+        await messageModel.deleteMany({ roomId: groupId });
         next();
     }
 );
@@ -26,6 +28,7 @@ groupSchema.pre("findOneAndDelete", async function (next) {
     const group = await this.model.findOne(filter).select("_id");
     if (group) {
         await groupRelationUserModel.deleteMany({ groupId: group._id });
+        await messageModel.deleteMany({ roomId: group._id });
     }
     next();
 });

@@ -5,7 +5,7 @@ const { StatusCodes, ReasonPhrases } = require("http-status-codes");
 
 const db = new DBService();
 
-module.exports = async (req, res) => {
+module.exports = async (req, res, next) => {
     const { id } = req.userInfo;
     try {
         const userRooms = await db.find(roomModel, {
@@ -17,15 +17,14 @@ module.exports = async (req, res) => {
             roomId: _id,
             userId: participants[0] === id ? participants[1] : participants[0],
         }));
-        res.status(StatusCodes.OK).json({
-            code: ReasonPhrases.OK,
-            users: userIds,
-        });
+
+        req.users = userIds;
+        next();
     } catch (err) {
         console.error("error in get all rooms: ", err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             code: ReasonPhrases.INTERNAL_SERVER_ERROR,
-            message: err.message,
+            error: err,
         });
     }
 };
