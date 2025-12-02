@@ -7,7 +7,7 @@ const db = new DBService();
 
 module.exports = async (req, res) => {
     let conn;
-    const { id: userId } = req.userinfo.id;
+    const { id: userId } = req.userinfo;
     const { id: groupId } = req.params;
 
     try {

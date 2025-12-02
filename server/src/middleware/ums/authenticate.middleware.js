@@ -7,7 +7,7 @@ const {
 
 module.exports = async (req, res, next) => {
     const authHeader = req.headers.authorization;
-    const accessToken =
+    let accessToken =
         authHeader && authHeader.startsWith("Bearer ")
             ? authHeader.substring(7)
             : null;
@@ -21,20 +21,21 @@ module.exports = async (req, res, next) => {
     try {
         let valid = await checkTokenValid(accessToken);
         if (!valid) {
-            const newAccessToken = await refreshGoogleToken(refresh_token);
+            const newAccessToken = await refreshGoogleToken(accessToken);
             if (!newAccessToken)
-                return res
-                    .status(401)
-                    .json({ message: "Unable to refresh token" });
-
+                return res.status(StatusCodes.UNAUTHORIZED).json({
+                    code: ReasonPhrases.UNAUTHORIZED,
+                    message: "Unable to refresh token",
+                });
+            accessToken = newAccessToken;
             res.setHeader("X-New-Token", newAccessToken);
-
-            userinfo = await getProfile(newAccessToken);
-            if (!userinfo)
-                return res
-                    .status(401)
-                    .json({ message: "Unable to fetch user info" });
         }
+        userinfo = await getProfile(accessToken);
+        if (!userinfo)
+            return res.status(StatusCodes.UNAUTHORIZED).json({
+                code: ReasonPhrases.UNAUTHORIZED,
+                message: "Unable to fetch user info",
+            });
         req.userinfo = userinfo;
         next();
     } catch (err) {

@@ -18,7 +18,7 @@ const socketConnect = async (socket, userId) => {
 const sendMessage = async (socket, data) => {
     try {
         const { content, roomId } = data;
-        const userId = users.get(socket.id);
+        const userId = UserMappingService.socketIds.get(socket.id);
 
         if (!userId) {
             throw new Error("User not authenticated");
