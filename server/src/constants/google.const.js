@@ -9,6 +9,7 @@ module.exports = {
     TOKEN_URL: "https://oauth2.googleapis.com/token",
     REVOKE_TOKEN_URL: "https://oauth2.googleapis.com/revoke",
     PROFILE_URL: "https://www.googleapis.com/oauth2/v2/userinfo",
+    TOKEN_INFO_URL: "https://oauth2.googleapis.com/tokeninfo",
     CLIENT_ID: client_id,
     CLIENT_SECRET: client_secret,
     REDIRECT_URI: redirect_uri,
@@ -16,5 +17,5 @@ module.exports = {
     SCOPE: "openid%20email%20profile",
     ACCESS_TYPE: "offline",
     PROMPT: "consent",
-    GRANT_TYPE: "authorization_code",
+    GRANT_TYPE: { code: "authorization_code", token: "refresh_token" },
 };

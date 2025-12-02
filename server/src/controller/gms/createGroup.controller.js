@@ -1,6 +1,7 @@
 const DBService = require("../../services/db.service");
 const groupModel = require("../../model/gms/group.model");
 const groupRelationUserModel = require("../../model/gms/group_relation_user.model");
+const { StatusCodes, ReasonPhrases } = require("http-status-codes");
 
 const db = new DBService();
 
@@ -13,7 +14,6 @@ module.exports = async (req, res) => {
     try {
         conn = await db.startTransaction();
 
-        // 1. Create group
         const [group] = await db.insertOne(
             groupModel,
             {
@@ -24,7 +24,6 @@ module.exports = async (req, res) => {
             conn
         );
 
-        // 2. Create admin user relation
         await db.insertOne(
             groupRelationUserModel,
             {
@@ -37,7 +36,8 @@ module.exports = async (req, res) => {
 
         await db.commitTransaction(conn);
 
-        return res.status(201).json({
+        return res.status(StatusCodes.CREATED).json({
+            code: ReasonPhrases.CREATED,
             message: "Group created successfully",
             group,
         });
@@ -45,9 +45,9 @@ module.exports = async (req, res) => {
         if (conn) await db.rollbackTransaction(conn);
         console.error("create Group error: ", err);
 
-        return res.status(500).json({
-            message: "Unable to create group",
-            error: err.message,
+        res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            code: ReasonPhrases.INTERNAL_SERVER_ERROR,
+            error: err,
         });
     } finally {
         if (conn) await db.endTransaction(conn);

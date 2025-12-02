@@ -6,7 +6,8 @@ const { StatusCodes, ReasonPhrases } = require("http-status-codes");
 const db = new DBService();
 
 module.exports = async (req, res) => {
-    const { id, userId } = req.userInfo;
+    const { id } = req.userInfo;
+    const userId = req.invitedUser;
     try {
         await db.insertOne(roomModel, {
             participants: [id, userId],
@@ -20,7 +21,7 @@ module.exports = async (req, res) => {
         console.error("error in get all rooms: ", err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             code: ReasonPhrases.INTERNAL_SERVER_ERROR,
-            message: err.message,
+            error: err,
         });
     }
 };

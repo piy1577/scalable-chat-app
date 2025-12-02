@@ -3,16 +3,15 @@ const http = require("http");
 const cors = require("cors");
 const morgan = require("morgan");
 require("dotenv").config();
-const notFoundHanlder = require("./src/middleware/notFound.middleware");
 const connectSocket = require("./src/routes/socket.router");
+const umsRouter = require("./src/routes/ums.router");
+const gmsRouter = require("./src/routes/gms.route");
+const mmsRouter = require("./src/routes/mms.router");
+const rmsRouter = require("./src/routes/rms.router");
 
 const app = express();
 const server = http.createServer(app);
-connectSocket(server); //chat management service
-/**
- * /send message
- * /seen message
- */
+connectSocket(server);
 app.use(
     cors({
         origin: "https://d26wu93n9u19t.cloudfront.net",
@@ -24,41 +23,14 @@ app.use("/health", (req, res) => {
     res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-app.use("/ums"); // user management service
-/**
- * /login
- * /callback
- * /logout
- * /invite User
- * /get all users
- */
-
-app.use("/gms"); // group management service
-/**
- * /create group
- * /add user to group
- * /leave grp
- * /remove user
- * /message info
- */
-
-app.use("/ups"); // user presense service
+app.use("/ums", umsRouter);
+app.use("/rms", rmsRouter);
+app.use("/gms", gmsRouter);
+app.use("/ups");
 /**
  * /hearbeat -> client heartbeat every second and heartbeat will contain current room is typing or not.
- * /online -> if last heartbeat > 10 second offline.
  */
-
-app.use("/mms"); // message management service
-/**
- * /get all message
- */
-
-
-/**
- * new branch -> pull then -> git checkout -b branchName
- * switch branch -> git checkout branchName
- */
-app.use("*", notFoundHanlder);
+app.use("/mms", mmsRouter);
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, "0.0.0.0", () => {
     console.info(`Server running on port ${PORT}`);

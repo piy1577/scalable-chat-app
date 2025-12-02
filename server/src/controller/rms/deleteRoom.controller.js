@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
         console.error("error in deleting room: ", err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             code: ReasonPhrases.INTERNAL_SERVER_ERROR,
-            message: err.message,
+            error: err,
         });
     } finally {
         await db.endTransaction(conn);

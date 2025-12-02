@@ -16,7 +16,7 @@ const generatetoken = async (code) => {
             client_secret: GOOGLE.CLIENT_SECRET,
             redirect_uri: GOOGLE.REDIRECT_URI,
             code,
-            grant_type: GOOGLE.GRANT_TYPE,
+            grant_type: GOOGLE.GRANT_TYPE.code,
         }),
     });
     const data = await res.json();
@@ -58,4 +58,53 @@ const revokeToken = async (token) => {
     cache.delete(token);
 };
 
-module.exports = { generatetoken, getProfile, revokeToken };
+const checkTokenValid = async (token) => {
+    try {
+        const res = await fetch(
+            `${GOOGLE.TOKEN_INFO_URL}?access_token=${token}`
+        );
+        if (!res.ok) return false;
+        return true;
+    } catch (err) {
+        console.error("Check token error: ", err);
+        return false;
+    }
+};
+
+async function refreshGoogleToken(token) {
+    try {
+        const refresh_token = cache.get(token);
+        if (!refresh_token) return null;
+
+        const res = await fetch(GOOGLE.TOKEN_URL, {
+            method: METHODS.POST,
+            headers: { [CONTENT_TYPE.CONTENT_TYPE]: CONTENT_TYPE.urlEncoded },
+            body: new URLSearchParams({
+                client_id: GOOGLE.CLIENT_ID,
+                client_secret: GOOGLE.CLIENT_SECRET,
+                refresh_token,
+                grant_type: GOOGLE.GRANT_TYPE.token,
+            }),
+        });
+
+        if (!res.ok) {
+            return null;
+        }
+
+        const data = await res.json();
+        cache.delete(token);
+        cache.set(data.access_token, refresh_token);
+        return data.access_token;
+    } catch (err) {
+        console.error("refreshGoogleToken error:", err);
+        return null;
+    }
+}
+
+module.exports = {
+    generatetoken,
+    getProfile,
+    revokeToken,
+    checkTokenValid,
+    refreshGoogleToken,
+};

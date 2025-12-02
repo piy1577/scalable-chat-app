@@ -1,12 +1,17 @@
 const { Router } = require("express");
-const getAllRoomsController = require("../controller/rms/getAllRooms.controller");
 const createRoomController = require("../controller/rms/createRoom.controller");
 const deleteRoomController = require("../controller/rms/deleteRoom.controller");
+const authenticateMiddleware = require("../middleware/ums/authenticate.middleware");
+const checkUserExistsMiddleware = require("../middleware/ums/checkUserExists.middleware");
 
 const rmsRouter = Router();
 
-rmsRouter.get("/", getAllRoomsController); //get all rooms
-rmsRouter.post("/", createRoomController); //create room
-rmsRouter.delete("/:id", deleteRoomController); //delete room
+rmsRouter.post(
+    "/",
+    authenticateMiddleware,
+    checkUserExistsMiddleware,
+    createRoomController
+);
+rmsRouter.delete("/:id", authenticateMiddleware, deleteRoomController);
 
 module.exports = rmsRouter;
