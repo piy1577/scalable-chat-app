@@ -21,7 +21,7 @@ const generatetoken = async (code) => {
     });
     const data = await res.json();
     if (data.refresh_token) {
-        cache.set(tokenData.access_token, tokenData.refresh_token);
+        cache.set(data.access_token, data.refresh_token);
     }
     return data;
 };

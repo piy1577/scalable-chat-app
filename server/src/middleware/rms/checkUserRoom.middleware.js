@@ -15,9 +15,9 @@ module.exports = async (req, res, next) => {
             one: true,
         });
 
-        if (!userRooms) next();
+        if (!userRooms) return next();
 
-        if (userRooms.participants.include(id)) {
+        if (userRooms.participants.includes(id)) {
             req.userRoom = true;
         }
         next();

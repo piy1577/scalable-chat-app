@@ -20,13 +20,13 @@ class UserMappingService {
         const userIds = this.rooms.get(roomId);
         if (!userIds) return [];
 
-        const socketIds = userIds.map((t) => socketIds.get(t));
+        const socketIds = userIds.map((t) => this.socketIds.get(t));
         return socketIds;
     };
 
     static register = (userId, socket) => {
         this.socketIds.set(socket?.id, userId);
-        this.sockets.set(socket);
+        this.sockets.set(userId, socket);
     };
 
     static disconnect = (socketId) => {

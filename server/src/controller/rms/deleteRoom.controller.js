@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
             conn
         );
 
-        if (!room || !room.participants.include(id)) {
+        if (!room || !room.participants.includes(id)) {
             await db.rollbackTransaction(conn);
             return res.status(StatusCodes.BAD_REQUEST).json({
                 code: ReasonPhrases.BAD_REQUEST,
