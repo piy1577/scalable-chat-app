@@ -46,24 +46,23 @@ describe("login Controller", () => {
             .mockImplementation(() => {});
         const mockStatus = jest.fn().mockReturnValue({ json: jest.fn() });
         mockRes.status = mockStatus;
-
-        // Mock the constants to cause an error
-        jest.doMock("../../../constants/google.const", () => {
-            throw new Error("Constants error");
+        mockRes.redirect = jest.fn(() => {
+            throw new Error("Redirect error");
         });
 
-        // This will throw, but we catch it
-        try {
-            loginController(mockReq, mockRes);
-        } catch (err) {
-            expect(consoleSpy).toHaveBeenCalledWith(
-                "Login error:",
-                err.message
-            );
-            expect(mockStatus).toHaveBeenCalledWith(
-                StatusCodes.INTERNAL_SERVER_ERROR
-            );
-        }
+        loginController(mockReq, mockRes);
+
+        expect(consoleSpy).toHaveBeenCalledWith(
+            "Login error:",
+            "Redirect error"
+        );
+        expect(mockStatus).toHaveBeenCalledWith(
+            StatusCodes.INTERNAL_SERVER_ERROR
+        );
+        expect(mockStatus().json).toHaveBeenCalledWith({
+            code: "Internal Server Error",
+            error: expect.any(Error),
+        });
 
         consoleSpy.mockRestore();
     });

@@ -12,17 +12,14 @@ module.exports = {
             lines: 0,
             statements: 0,
         },
-        "./src/**/*.middleware.js": {
-            lines: 90,
-            statements: 90
+        "src/**/*.middleware.js": {
+            statements: 90,
         },
-        "./src/**/*.controller.js": {
-            lines: 90,
-            statements: 90
+        "src/**/*.controller.js": {
+            statements: 90,
         },
-        "./src/**/*.service.js": {
-            lines: 90,
-            statements: 90
+        "src/**/*.service.js": {
+            statements: 90,
         },
-    }
+    },
 };
